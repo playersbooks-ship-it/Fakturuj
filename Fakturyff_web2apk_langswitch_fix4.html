@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Faktúry – Offline (Android v5, čisté UI)</title>
+  <style>
+    :root{
+      --bg:#f7f8fb; --card:#ffffff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --accent:#2563eb; --ok:#16a34a; --warn:#d97706;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; background:var(--bg); color:var(--text)}
+    header{position:sticky; top:0; z-index:5; backdrop-filter: blur(6px); background:rgba(255,255,255,.85); border-bottom:1px solid var(--line)}
+    .bar{max-width:960px; margin:0 auto; padding:10px 14px; display:flex; gap:8px; align-items:center; justify-content:space-between}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700}
+    .brand small{color:var(--muted); font-weight:500}
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+    button, input, select, textarea{font:inherit; background:#ffffff; color:var(--text); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+    button{cursor:pointer}
+    .primary{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700}
+    .good{background:var(--ok); color:#fff; border-color:var(--ok)}
+    .warn{background:var(--warn); color:#fff; border-color:var(--warn)}
+    .pill{border-radius:999px; padding:8px 12px; font-weight:600}
+    .container{max-width:960px; margin:10px auto; padding:0 14px 80px}
+    .tabs{display:flex; gap:8px; margin:12px 0}
+    .tab{flex:1; text-align:center; border-radius:12px; padding:10px; font-weight:700; background:#fff; border:1px solid var(--line); color:var(--muted)}
+    .tab.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+    .grid{display:grid; gap:12px}
+    @media (min-width:960px){ .grid{grid-template-columns:1fr 1fr} .tabs{display:none} }
+    .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px}
+    .card h2{margin:0 0 10px; font-size:16px}
+    .row{display:grid; grid-template-columns:repeat(12,1fr); gap:8px; margin-bottom:8px}
+    .row > *{min-width:0}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    table{width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff}
+    thead th{background:#f3f4f6; color:#374151; text-align:left; padding:8px; font-size:12px}
+    tbody td{border-top:1px solid var(--line); padding:6px 8px; vertical-align:top}
+    td input, td textarea{width:100%; padding:6px 8px}
+    td textarea{min-height:38px; resize:vertical}
+    .totals{display:grid; gap:6px}
+    .totals .line{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--line)}
+    .muted{color:var(--muted)}
+    .hr{height:1px; background:var(--line); margin:12px 0}
+    .footerbar{position:fixed; bottom:0; left:0; right:0; z-index:10; display:flex; gap:10px; padding:10px 14px; background:rgba(255,255,255,.95); border-top:1px solid var(--line)}
+    .footerbar button{flex:1}
+    .hide{display:none !important}
+    .right{text-align:right}
+    .pill.gray{background:#eef2ff; border-color:#c7d2fe; color:#1e3a8a}
+
+    /* print: skryť UI, ponechať iba náhľad */
+    @media print{
+      header, #editor{display:none !important}
+      #preview{display:block !important}
+      #invoice{page-break-inside:avoid; break-inside:avoid}
+    }
+  </style>
+
+<style>
+  .suggest-box{position:absolute;z-index:9999;max-height:240px;overflow:auto;border:1px solid #ddd;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);background:#fff}
+  .suggest-item{padding:8px 10px;cursor:pointer}
+  .suggest-item.active{background:#f1f5f9}
+  @media (prefers-color-scheme: dark){
+    .suggest-box{background:#111827;border-color:#374151;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+    .suggest-item.active{background:#1f2937}
+  }
+</style>
+
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">📄 Faktúry Offline <small>Android • bez internetu</small></div>
+      <div class="actions">
+        <select id="lang" class="pill">
+          <option value="sk" selected>SK</option>
+          <option value="de">DE</option>
+        </select>
+        <button class="primary pill" id="btn-print">PDF (aktuálny jazyk)</button>
+        <button class="pill" id="btn-save">Uložiť</button>
+        <button class="pill" id="btn-load">Načítať</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+<div class="grid">
+      <!-- EDITOR -->
+      <section class="card" id="editor">
+        <h2 data-t="seller_title">Dodávateľ</h2>
+        <div class="row">
+          <div style="grid-column:span 12"><label data-t="seller_name">Názov</label><input id="s_name" autocomplete="organization" /></div>
+          <div style="grid-column:span 12"><label data-t="address">Adresa</label><input id="s_addr" autocomplete="street-address" /></div>
+          <div style="grid-column:span 4"><label>IČO</label><input id="s_ico" inputmode="numeric" /></div>
+          <div style="grid-column:span 4"><label>DIČ</label><input id="s_dic" /></div>
+          <div style="grid-column:span 4"><label>IČ DPH</label><input id="s_icdph" /></div>
+          <div style="grid-column:span 6"><label>E‑mail</label><input id="s_mail" type="email" /></div>
+          <div style="grid-column:span 6"><label data-t="phone">Telefón</label><input id="s_phone" type="tel" autocomplete="tel" /></div>
+          <div style="grid-column:span 7"><label>IBAN</label><input id="iban" value="SK" inputmode="text" /></div>
+          <div style="grid-column:span 5"><label>BIC/SWIFT</label><input id="bic" inputmode="text" /></div>
+        </div>
+        <div class="row">
+          <div style="grid-column:span 12; display:flex; gap:8px; align-items:center">
+            <button id="btn-save-profile" class="good" data-t="save_profile">Uložiť profil</button>
+            <button id="btn-load-profile" data-t="load_profile">Načítať profil</button>
+            <span class="muted" id="status"></span>
+          </div>
+        </div>
+
+        <h2 data-t="invoice_title">Faktúra</h2>
+        <div class="row">
+          <div style="grid-column:span 4"><label data-t="prefix">Prefix</label><input id="prefix" value="OF" /></div>
+          <div style="grid-column:span 4"><label data-t="number">Číslo</label><input id="number" /></div>
+          <div style="grid-column:span 4"><label data-t="currency">Mena</label>
+            <select id="currency"><option>EUR</option><option>CZK</option><option>USD</option><option>GBP</option></select>
+          </div>
+          <div style="grid-column:span 4"><label data-t="issue">Dátum vystavenia</label><input id="issue" type="date" /></div>
+          <div style="grid-column:span 4"><label data-t="delivery">Dátum dodania</label><input id="delivery" type="date" /></div>
+          <div style="grid-column:span 4"><label data-t="due_days">Splatnosť (dni)</label><input id="due_days" type="number" step="1" value="14" inputmode="numeric" /></div>
+          <div style="grid-column:span 4"><label data-t="due">Splatnosť</label><input id="due" type="date" /></div>
+          <div style="grid-column:span 4"><label>VS</label><input id="vs" inputmode="numeric" /></div>
+          <div style="grid-column:span 4"><label data-t="vat_mode">DPH</label>
+            <select id="vat_mode"><option value="nonvat" data-t="nonvat">Nie som platca DPH</option><option value="vat" data-t="vat">Som platca DPH</option></select>
+          </div>
+          <div style="grid-column:span 4"><label data-t="vat_rate">Sadzba DPH (%)</label><input id="vat_rate" type="number" step="0.01" value="20" /></div>
+          <div style="grid-column:span 12"><label data-t="note">Popis obdobia / poznámka</label><input id="note" placeholder="Obdobie od ... do ..." /></div>
+          <div style="grid-column:span 12"><label data-t="outro">Text po faktúre</label><input id="outro" placeholder="Podľa rámcovej zmluvy..." /></div>
+          <div style="grid-column:span 12"><label data-t="stamp">Pečiatka/podpis (PNG)</label><input id="stamp_file" type="file" accept="image/*" /></div>
+        </div>
+
+        <h2 data-t="buyer_title">Odberateľ</h2>
+        <div class="row">
+          <div style="grid-column:span 6"><label data-t="buyer_name">Názov</label><input id="b_name" /></div>
+          <div style="grid-column:span 6"><label>E‑mail</label><input id="b_mail" type="email" /></div>
+          <div style="grid-column:span 12"><label data-t="address">Adresa</label><input id="b_addr" /></div>
+          <div style="grid-column:span 4"><label>IČO</label><input id="b_ico" /></div>
+          <div style="grid-column:span 4"><label>DIČ</label><input id="b_dic" /></div>
+          <div style="grid-column:span 4"><label>IČ DPH</label><input id="b_icdph" /></div>
+        </div>
+
+        <h2 data-t="items">Položky</h2>
+        <table id="edit_items">
+          <thead><tr>
+            <th style="width:32px">#</th>
+            <th data-t="item_name">Názov</th>
+            <th data-t="item_desc">Popis</th>
+            <th style="width:100px" data-t="qty">Množstvo</th>
+            <th style="width:120px" data-t="unit_price">Jedn. cena</th>
+            <th style="width:120px; text-align:right" data-t="subtotal">Medzisúčet</th>
+            <th style="width:1%">✕</th>
+          </tr></thead>
+          <tbody id="edit_body"></tbody>
+        </table>
+        <div style="display:flex; gap:8px; margin-top:8px">
+          <button id="btn-add" class="primary" data-t="add_item">Pridať položku</button>
+          <button id="btn-clear" class="warn" data-t="clear_items">Vymazať všetky</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <div style="grid-column:span 12; display:flex; gap:8px; align-items:center">
+            <select id="saved-list" style="flex:1"></select>
+            <button id="btn-save-invoice" class="good" data-t="save_invoice">Uložiť faktúru</button>
+            <button id="btn-load-invoice" data-t="load_invoice">Načítať</button>
+            <button id="btn-delete-invoice" class="warn" data-t="delete_invoice">Zmazať</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PREVIEW -->
+      <section class="card" id="preview">
+        <div id="invoice">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start">
+            <div>
+              <div id="s_name_o" style="font-weight:800; font-size:18px"></div>
+              <div class="muted" id="s_addr_o"></div>
+              <div class="muted" id="s_ids_o"></div>
+              <div class="muted" id="s_contact_o"></div>
+            </div>
+            <div class="right">
+              <div class="pill gray" style="display:inline-block" id="lbl_invoice">Faktúra</div>
+              <div><strong id="lbl_number">Číslo:</strong> <span id="num_o"></span></div>
+              <div><span class="muted" id="lbl_issue">Vystavená:</span> <span id="issue_o"></span></div>
+              <div><span class="muted" id="lbl_delivery">Dodanie:</span> <span id="deliv_o"></span></div>
+              <div><span class="muted" id="lbl_due">Splatnosť:</span> <span id="due_o"></span></div>
+              <div><span class="muted" id="lbl_vs">VS:</span> <span id="vs_o"></span></div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+            <div>
+              <h2 id="lbl_buyer">Odberateľ</h2>
+              <div id="b_name_o" style="font-weight:700"></div>
+              <div class="muted" id="b_addr_o"></div>
+              <div class="muted" id="b_ids_o"></div>
+              <div class="muted" id="b_mail_o"></div>
+            </div>
+            <div class="right">
+              <h2 id="lbl_payment">Platba</h2>
+              <div><span class="muted">IBAN:</span> <span id="iban_o"></span></div>
+              <div><span class="muted">BIC:</span> <span id="bic_o"></span></div>
+              <img id="qr" width="200" height="200" style="margin-top:6px; border:1px solid var(--line); border-radius:8px" alt="QR platba" />
+              <div class="muted" style="font-size:12px" id="lbl_qr_hint">QR platba (SPD 1.0 – online generátor)</div>
+            </div>
+          </div>
+
+          <div id="note_o" style="margin:8px 0"></div>
+
+          <table id="view_items">
+            <thead><tr>
+              <th>#</th>
+              <th id="lbl_col_desc">Popis</th>
+              <th id="lbl_col_qty">Množstvo</th>
+              <th id="lbl_col_price">Jedn. cena</th>
+              <th style="text-align:right" id="lbl_col_total">Spolu</th>
+            </tr></thead>
+            <tbody id="view_body"></tbody>
+          </table>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+            <div class="muted"><span id="lbl_currency">Mena:</span> <span id="curr_o">EUR</span></div>
+            <div class="totals">
+              <div class="line"><span id="lbl_subtotal">Medzisúčet</span><strong id="sum_net">0,00</strong></div>
+              <div class="line" id="vat_line"><span id="lbl_vat">DPH (<span id="vat_rate_o">20</span>%)</span><strong id="sum_vat">0,00</strong></div>
+              <div class="line"><span id="lbl_gross">Spolu k úhrade</span><strong id="sum_gross">0,00</strong></div>
+            </div>
+          </div>
+
+          <div id="outro_o" style="margin-top:8px"></div>
+
+          <!-- Stamp bottom-right -->
+          <div class="right" style="margin-top:12px">
+            <img id="stamp_img" alt="Pečiatka/podpis" style="max-height:86px; max-width:60%; object-fit:contain"/>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Bottom actions for mobile -->
+  <!-- Robust QR encoder (when online). This is optional; app still works offline with built-in fallback. -->
+<script>
+  ;(() => {
+    const qs = s => document.querySelector(s);
+    const qsa = s => Array.from(document.querySelectorAll(s));
+
+    // i18n strings (SK/DE)
+    const STR = {
+      sk: {
+        seller_title:'Dodávateľ', seller_name:'Názov', address:'Adresa', phone:'Telefón',
+        save_profile:'Uložiť profil', load_profile:'Načítať profil',
+        invoice_title:'Faktúra', prefix:'Prefix', number:'Číslo', currency:'Mena',
+        issue:'Dátum vystavenia', delivery:'Dátum dodania', due_days:'Splatnosť (dni)', due:'Splatnosť',
+        vat_mode:'DPH', nonvat:'Nie som platca DPH', vat:'Som platca DPH', vat_rate:'Sadzba DPH (%)',
+        note:'Popis obdobia / poznámka', outro:'Text po faktúre', stamp:'Pečiatka/podpis (PNG)',
+        buyer_title:'Odberateľ', buyer_name:'Názov',
+        items:'Položky', item_name:'Názov', item_desc:'Popis', qty:'Množstvo', unit_price:'Jedn. cena', subtotal:'Medzisúčet',
+        add_item:'Pridať položku', clear_items:'Vymazať všetky',
+        save_invoice:'Uložiť faktúru', load_invoice:'Načítať', delete_invoice:'Zmazať',
+        lbl_invoice:'Faktúra', lbl_number:'Číslo:', lbl_issue:'Vystavená:', lbl_delivery:'Dodanie:', lbl_due:'Splatnosť:', lbl_vs:'VS:',
+        lbl_buyer:'Odberateľ', lbl_payment:'Platba', lbl_qr_hint:'QR platba (SPD 1.0 – online generátor)',
+        lbl_col_desc:'Popis', lbl_col_qty:'Množstvo', lbl_col_price:'Jedn. cena', lbl_col_total:'Spolu',
+        lbl_currency:'Mena:', lbl_subtotal:'Medzisúčet', lbl_gross:'Spolu k úhrade', lbl_vat:'DPH',
+        msg_prefix:'Faktúra '
+      },
+      de: {
+        seller_title:'Rechnungssteller', seller_name:'Name', address:'Adresse', phone:'Telefon',
+        save_profile:'Profil speichern', load_profile:'Profil laden',
+        invoice_title:'Rechnung', prefix:'Präfix', number:'Nummer', currency:'Währung',
+        issue:'Ausgestellt am', delivery:'Leistung am', due_days:'Fällig in (Tagen)', due:'Fällig am',
+        vat_mode:'MwSt', nonvat:'Kein MwSt.-Pflichtiger', vat:'MwSt.-Pflichtiger', vat_rate:'MwSt.-Satz (%)',
+        note:'Leistungszeitraum / Hinweis', outro:'Text nach der Rechnung', stamp:'Stempel/Unterschrift (PNG)',
+        buyer_title:'Kunde', buyer_name:'Name',
+        items:'Positionen', item_name:'Bezeichnung', item_desc:'Beschreibung', qty:'Menge', unit_price:'Einzelpreis', subtotal:'Zwischensumme',
+        add_item:'Position hinzufügen', clear_items:'Alle löschen',
+        save_invoice:'Rechnung speichern', load_invoice:'Laden', delete_invoice:'Löschen',
+        lbl_invoice:'Rechnung', lbl_number:'Nr.:', lbl_issue:'Ausgestellt:', lbl_delivery:'Leistung:', lbl_due:'Fällig:', lbl_vs:'Verw.:',
+        lbl_buyer:'Kunde', lbl_payment:'Zahlung', lbl_qr_hint:'QR‑Zahlung (Pay by Square / SPD 1.0)',
+        lbl_col_desc:'Beschreibung', lbl_col_qty:'Menge', lbl_col_price:'Einzelpreis', lbl_col_total:'Gesamt',
+        lbl_currency:'Währung:', lbl_subtotal:'Zwischensumme', lbl_gross:'Summe zu zahlen', lbl_vat:'MwSt',
+        msg_prefix:'Rechnung '
+      }
+    };
+    function applyLang(lang){
+      document.documentElement.lang = lang;
+      qsa('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if(STR[lang][key]) el.textContent = STR[lang][key];
+      });
+      qs('#lbl_invoice').textContent = STR[lang].lbl_invoice;
+      qs('#lbl_number').textContent = STR[lang].lbl_number;
+      qs('#lbl_issue').textContent = STR[lang].lbl_issue;
+      qs('#lbl_delivery').textContent = STR[lang].lbl_delivery;
+      qs('#lbl_due').textContent = STR[lang].lbl_due;
+      qs('#lbl_vs').textContent = STR[lang].lbl_vs;
+      qs('#lbl_buyer').textContent = STR[lang].lbl_buyer;
+      qs('#lbl_payment').textContent = STR[lang].lbl_payment;
+      qs('#lbl_qr_hint').textContent = STR[lang].lbl_qr_hint;
+      qs('#lbl_col_desc').textContent = STR[lang].lbl_col_desc;
+      qs('#lbl_col_qty').textContent = STR[lang].lbl_col_qty;
+      qs('#lbl_col_price').textContent = STR[lang].lbl_col_price;
+      qs('#lbl_col_total').textContent = STR[lang].lbl_col_total;
+      qs('#lbl_currency').textContent = STR[lang].lbl_currency;
+      qs('#lbl_subtotal').textContent = STR[lang].lbl_subtotal;
+      qs('#lbl_gross').textContent = STR[lang].lbl_gross;
+      // VAT label prefix
+      qs('#vat_line').querySelector('span').firstChild.nodeValue = STR[lang].lbl_vat + ' (';
+      computeTotals();
+    }
+
+    // Tabs removed
+
+    // ---- Print current page (only current language)
+    function printCurrent(){ window.print(); }qs('#btn-print').addEventListener('click', printCurrent);
+// State
+    const state = { items: [] };
+
+    // Utilities
+    function fmtMoney(v){
+      const cur = qs('#currency').value || 'EUR';
+      try{ return new Intl.NumberFormat('sk-SK',{style:'currency',currency:cur, minimumFractionDigits:2}).format(Number(v||0)); }
+      catch(e){ return (Number(v||0)).toFixed(2)+' '+cur; }
+    }
+    function fmtDate(iso){ if(!iso) return ''; try{ return new Intl.DateTimeFormat('sk-SK').format(new Date(iso)); }catch(e){ return iso; } }
+    function lineTotal(it){ const q=Number(it.qty||0), p=Number(it.price||0); return Math.round(q*p*100)/100; }
+    function setStatus(t){ const s=qs('#status'); if(!s) return; s.textContent=t; setTimeout(()=> s.textContent='', 2000); }
+
+    // Items (delegated listeners)
+    const editBody = qs('#edit_body');
+    const viewBody = qs('#view_body');
+    function renderItems(){
+      editBody.innerHTML = state.items.map((it,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td><input value="${it.name||''}" data-i="${i}" data-k="name" placeholder="Názov"></td>
+          <td><textarea data-i="${i}" data-k="desc" placeholder="Popis">${it.desc||''}</textarea></td>
+          <td><input type="number" step="0.001" value="${it.qty||1}" data-i="${i}" data-k="qty" inputmode="decimal"></td>
+          <td><input type="number" step="0.01" value="${it.price||0}" data-i="${i}" data-k="price" inputmode="decimal"></td>
+          <td class="right"><span id="sub_${i}">${fmtMoney(lineTotal(it))}</span></td>
+          <td><button data-act="del" data-i="${i}">✕</button></td>
+        </tr>`).join('');
+
+      viewBody.innerHTML = state.items.map((it,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td>
+            <div style="font-weight:600">${(it.name||'')}</div>
+            ${it.desc? `<div class="muted" style="white-space:pre-wrap">${it.desc}</div>` : ''}
+          </td>
+          <td>${it.qty||0}</td>
+          <td>${fmtMoney(it.price||0)}</td>
+          <td class="right">${fmtMoney(lineTotal(it))}</td>
+        </tr>`).join('');
+
+      computeTotals();
+    }
+
+    editBody.addEventListener('input', (e)=>{
+      const el = e.target; if(!el.dataset || el.dataset.i===undefined) return;
+      const i = Number(el.dataset.i), k = el.dataset.k; let v = el.value;
+      if(['qty','price'].includes(k)) v = parseFloat(v)||0;
+      state.items[i][k] = v;
+      const sub = qs('#sub_'+i); if(sub) sub.textContent = fmtMoney(lineTotal(state.items[i]));
+      computeTotals(); persistDraft();
+    });
+    editBody.addEventListener('click', (e)=>{
+      const b = e.target.closest('button'); if(!b) return;
+      const i = Number(b.dataset.i); state.items.splice(i,1); renderItems(); persistDraft();
+    });
+    qs('#btn-add').addEventListener('click', ()=>{ state.items.push({name:'',desc:'',qty:1,price:0}); renderItems(); persistDraft(); });
+    qs('#btn-clear').addEventListener('click', ()=>{ if(confirm('Vymazať všetky položky?')){ state.items=[]; renderItems(); persistDraft(); } });
+
+    // Mirrors & totals & preview
+    function computeTotals(){
+      const net = state.items.reduce((s,it)=> s + lineTotal(it), 0);
+      const mode = qs('#vat_mode').value; const rate = parseFloat(qs('#vat_rate').value)||0;
+      const vat = (mode==='vat')? net*(rate/100):0;
+      const gross = net + vat;
+      qs('#sum_net').textContent = fmtMoney(net);
+      qs('#sum_vat').textContent = fmtMoney(vat);
+      qs('#sum_gross').textContent = fmtMoney(gross);
+      qs('#vat_rate_o').textContent = rate.toString();
+      qs('#vat_line').style.display = (mode==='vat')? '':'none';
+      qs('#curr_o').textContent = qs('#currency').value || 'EUR';
+
+      qs('#s_name_o').textContent = qs('#s_name').value;
+      qs('#s_addr_o').textContent = qs('#s_addr').value;
+      qs('#s_ids_o').textContent = ['IČO '+(qs('#s_ico').value||''),'DIČ '+(qs('#s_dic').value||''),'IČ DPH '+(qs('#s_icdph').value||'')].filter(Boolean).join(' • ');
+      qs('#s_contact_o').textContent = [qs('#s_mail').value, qs('#s_phone').value].filter(Boolean).join(' • ');
+      qs('#num_o').textContent = (qs('#prefix').value?qs('#prefix').value+' ':'') + (qs('#number').value||'');
+      qs('#issue_o').textContent = fmtDate(qs('#issue').value);
+      qs('#deliv_o').textContent = fmtDate(qs('#delivery').value);
+      qs('#due_o').textContent = fmtDate(qs('#due').value);
+      qs('#vs_o').textContent = qs('#vs').value;
+
+      qs('#b_name_o').textContent = qs('#b_name').value;
+      qs('#b_addr_o').textContent = qs('#b_addr').value;
+      qs('#b_ids_o').textContent = ['IČO '+(qs('#b_ico').value||''),'DIČ '+(qs('#b_dic').value||''),'IČ DPH '+(qs('#b_icdph').value||'')].filter(Boolean).join(' • ');
+      qs('#b_mail_o').textContent = qs('#b_mail').value;
+
+      qs('#iban_o').textContent = qs('#iban').value;
+      qs('#bic_o').textContent = qs('#bic').value;
+
+      qs('#note_o').textContent = qs('#note').value;
+      qs('#outro_o').textContent = qs('#outro').value;
+
+      drawQR(buildSPD(gross));
+    }
+
+    qsa('#s_name,#s_addr,#s_ico,#s_dic,#s_icdph,#s_mail,#s_phone,#iban,#bic,#prefix,#number,#currency,#issue,#delivery,#due_days,#due,#vs,#vat_mode,#vat_rate,#note,#outro,#b_name,#b_addr,#b_ico,#b_dic,#b_icdph,#b_mail').forEach(el => el.addEventListener('input', ()=>{ if(el.id==='issue' || el.id==='due_days') recalcDue(); computeTotals(); persistDraft(); }));
+
+    // Dates
+    function recalcDue(){
+      const issue = qs('#issue').value;
+      const days = parseInt((qs('#due_days').value||'0'),10);
+      if(issue && !isNaN(days)){
+        const d = new Date(issue); d.setDate(d.getDate()+days);
+        qs('#due').value = d.toISOString().slice(0,10);
+      }
+    }
+
+    // Stamp
+    qs('#stamp_file').addEventListener('change', e=>{
+      const f=e.target.files && e.target.files[0]; if(!f) return;
+      const r=new FileReader(); r.onload=()=>{ qs('#stamp_img').src=r.result; persistDraft(); }; r.readAsDataURL(f);
+    });
+
+    // Profile save/load
+    const KEY_PROFILE = 'inv:android5:profile';
+    function saveProfile(){
+      const p={name:qs('#s_name').value, addr:qs('#s_addr').value, ico:qs('#s_ico').value, dic:qs('#s_dic').value, icdph:qs('#s_icdph').value, mail:qs('#s_mail').value, phone:qs('#s_phone').value, iban:qs('#iban').value, bic:qs('#bic').value};
+      localStorage.setItem(kProfile(), JSON.stringify(p)); setStatus('Profil uložený');
+    }
+    function loadProfile(){
+      const raw=localStorage.getItem(kProfile()); if(!raw){ setStatus('Žiadny profil'); return; }
+      try{ const p=JSON.parse(raw);
+        qs('#s_name').value=p.name||''; qs('#s_addr').value=p.addr||''; qs('#s_ico').value=p.ico||''; qs('#s_dic').value=p.dic||''; qs('#s_icdph').value=p.icdph||''; qs('#s_mail').value=p.mail||''; qs('#s_phone').value=p.phone||''; qs('#iban').value=p.iban||''; qs('#bic').value=p.bic||'';
+        computeTotals(); setStatus('Profil načítaný');
+      }catch(e){ setStatus('Chybný profil'); }
+    }
+    qs('#btn-save-profile').addEventListener('click', saveProfile);
+    qs('#btn-load-profile').addEventListener('click', loadProfile);
+
+    
+// ---- Language-aware keys & Recents ----
+function getLang(){ return (document.documentElement.lang || CURRENT_LANG || (qs('#lang')?.value) || 'sk'); }
+function kProfile(){ return 'inv:android5:profile:' + getLang(); }
+function kDraft(){ return 'inv:android5:draft:' + getLang(); }
+function kIndex(){ return 'inv:android5:index:' + getLang(); }
+const KEY_RECENTS_PREFIX = 'inv:android5:recents:';
+
+function loadRecents(){
+  const lang = getLang();
+  try{ return JSON.parse(localStorage.getItem(KEY_RECENTS_PREFIX+lang)) || {buyers:[], itemNames:[]} }catch(e){ return {buyers:[], itemNames:[]} }
+}
+function saveRecents(R){
+  const lang = getLang();
+  localStorage.setItem(KEY_RECENTS_PREFIX+lang, JSON.stringify(R));
+}
+function pushRecent(arr, val, max=12){
+  val = (val||'').trim(); if(!val) return;
+  const i = arr.indexOf(val); if(i>=0) arr.splice(i,1);
+  arr.unshift(val);
+  if(arr.length>max) arr.length = max;
+}
+
+// ---- Google-like Suggestion Dropdown ----
+class SuggestBox{
+  constructor(){
+    this.box = document.createElement('div');
+    this.box.className = 'suggest-box';
+    this.box.style.display = 'none';
+    document.body.appendChild(this.box);
+    this.items = [];
+    this.idx = -1;
+    this.anchor = null;
+
+    document.addEventListener('scroll', ()=> this.repos(), true);
+    window.addEventListener('resize', ()=> this.repos());
+  }
+  show(list, anchor){
+    this.anchor = anchor;
+    this.box.innerHTML = '';
+    this.items = list || [];
+    this.idx = -1;
+    if(!this.items.length){ this.hide(); return; }
+    this.items.forEach((txt,i)=>{
+      const it = document.createElement('div');
+      it.className = 'suggest-item';
+      it.textContent = txt;
+      it.addEventListener('mousedown', (e)=>{ e.preventDefault(); this.pick(i); });
+      this.box.appendChild(it);
+    });
+    this.box.style.display = 'block';
+    this.repos();
+  }
+  hide(){ this.box.style.display = 'none'; this.anchor = null; this.idx=-1; }
+  repos(){
+    if(!this.anchor || this.box.style.display==='none') return;
+    const r = this.anchor.getBoundingClientRect();
+    this.box.style.minWidth = r.width+'px';
+    this.box.style.left = (r.left + window.scrollX) + 'px';
+    this.box.style.top  = (r.bottom + window.scrollY) + 'px';
+  }
+  move(d){
+    if(this.box.style.display==='none') return;
+    this.idx = (this.idx + d + this.items.length) % this.items.length;
+    [...this.box.children].forEach((el,i)=> el.classList.toggle('active', i===this.idx));
+  }
+  pick(i=this.idx){
+    if(i<0 || i>=this.items.length || !this.anchor) return;
+    const val = this.items[i];
+    this.anchor.value = val;
+    this.anchor.dispatchEvent(new Event('input', {bubbles:true}));
+    this.hide();
+  }
+}
+const SUGGEST = new SuggestBox();
+
+function filterList(list, q){
+  q = (q||'').trim().toLowerCase();
+  if(!q) return list.slice(0,8);
+  const exact = list.filter(v=> v.toLowerCase().startsWith(q));
+  const rest  = list.filter(v=> !v.toLowerCase().startsWith(q) && v.toLowerCase().includes(q));
+  const out = exact.concat(rest);
+  // dedupe
+  return out.filter((v,i,a)=> a.indexOf(v)===i).slice(0,8);
+}
+
+function bindBuyerSuggest(){
+  const inp = qs('#b_name'); if(!inp) return;
+  const show = ()=>{
+    const R = loadRecents(); const all = R.buyers;
+    SUGGEST.show(filterList(all, inp.value), inp);
+  };
+  inp.addEventListener('focus', show);
+  inp.addEventListener('input', show);
+  inp.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); SUGGEST.move(1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); SUGGEST.move(-1); }
+    else if(e.key==='Enter'){ if(SUGGEST.idx>=0){ e.preventDefault(); SUGGEST.pick(); } }
+    else if(e.key==='Escape'){ SUGGEST.hide(); }
+  });
+  inp.addEventListener('blur', ()=> setTimeout(()=> SUGGEST.hide(), 120));
+}
+
+function bindItemSuggest(){
+  const tbody = qs('#items_tbody'); if(!tbody) return;
+  let activeInput = null;
+  const showFor = (input)=>{
+    activeInput = input;
+    const R = loadRecents(); const all = R.itemNames;
+    SUGGEST.show(filterList(all, input.value), input);
+  };
+  tbody.addEventListener('focusin', (e)=>{
+    const el = e.target;
+    if(el && el.matches('input[data-k="name"]')){
+      showFor(el);
+    }
+  });
+  tbody.addEventListener('input', (e)=>{
+    const el = e.target;
+    if(el && el.matches('input[data-k="name"]')){
+      showFor(el);
+    }
+  });
+  tbody.addEventListener('keydown', (e)=>{
+    const el = e.target;
+    if(el && el.matches('input[data-k="name"]')){
+      if(e.key==='ArrowDown'){ e.preventDefault(); SUGGEST.move(1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); SUGGEST.move(-1); }
+      else if(e.key==='Enter'){ if(SUGGEST.idx>=0){ e.preventDefault(); SUGGEST.pick(); } }
+      else if(e.key==='Escape'){ SUGGEST.hide(); }
+    }
+  });
+  tbody.addEventListener('blur', (e)=>{
+    if(e.target && e.target.matches('input[data-k="name"]')){
+      setTimeout(()=> SUGGEST.hide(), 120);
+    }
+  }, true);
+}
+
+// Push recents on blur and on save
+function setupRecentPush(){
+  const b = qs('#b_name');
+  if(b){
+    b.addEventListener('blur', ()=>{ const R=loadRecents(); pushRecent(R.buyers, b.value); saveRecents(R); });
+  }
+  const tbody = qs('#items_tbody');
+  if(tbody){
+    tbody.addEventListener('blur', (e)=>{
+      const el = e.target;
+      if(el && el.matches('input[data-k="name"]')){
+        const R=loadRecents(); pushRecent(R.itemNames, el.value); saveRecents(R);
+      }
+    }, true);
+  }
+}
+
+// Re-bind when items rerender
+const _origRenderItems = renderItems;
+renderItems = function(){
+  _origRenderItems();
+  bindItemSuggest();
+};
+
+
+
+// ---- Unified language change handler (single source of truth) ----
+let CURRENT_LANG = (qs('#lang')?.value || document.documentElement.lang || 'sk');
+
+function onLangChange(e){
+  const newLang = (e && e.target && e.target.value) ? e.target.value : (qs('#lang')?.value || 'sk');
+  // Force the selector to the new value immediately (UI feedback)
+  if(qs('#lang')) qs('#lang').value = newLang;
+  try{
+    // Save current draft under old language key BEFORE switching
+    const oldLang = CURRENT_LANG || (document.documentElement.lang||'sk');
+    const oldDraftKey = 'inv:android5:draft:' + oldLang;
+    localStorage.setItem(oldDraftKey, JSON.stringify(collect()));
+  }catch(err){ console.warn('Saving old draft before lang switch failed', err); }
+  // Switch UI + lang markers
+  applyLang(newLang);
+  document.documentElement.lang = newLang;
+  CURRENT_LANG = newLang;
+  // Explicitly load draft for newLang (avoid relying on getLang chain)
+  try{
+    const newDraftKey = 'inv:android5:draft:' + newLang;
+    const raw = localStorage.getItem(newDraftKey);
+    if(raw){ try{ fill(JSON.parse(raw)); }catch(e){ seed(); } }
+    else { seed(); }
+  }catch(e){ seed(); }
+  // Refresh views that depend on language
+  fillSavedList();
+  renderRecentDatalists && renderRecentDatalists();
+  bindBuyerSuggest && bindBuyerSuggest();
+  bindItemSuggest && bindItemSuggest();
+}
+
+// Bind once
+qs('#lang').addEventListener('change', onLangChange);
+
+// Draft + invoices
+    const KEY_DRAFT='inv:android5:draft';
+    const KEY_INDEX='inv:android5:index';
+    function collect(){
+      return {
+        lang: qs('#lang').value,
+        prefix:qs('#prefix').value, number:qs('#number').value, currency:qs('#currency').value, issue:qs('#issue').value, delivery:qs('#delivery').value, due_days:qs('#due_days').value, due:qs('#due').value, vs:qs('#vs').value,
+        vat_mode:qs('#vat_mode').value, vat_rate:qs('#vat_rate').value, note:qs('#note').value, outro:qs('#outro').value,
+        seller:{name:qs('#s_name').value, addr:qs('#s_addr').value, ico:qs('#s_ico').value, dic:qs('#s_dic').value, icdph:qs('#s_icdph').value, mail:qs('#s_mail').value, phone:qs('#s_phone').value},
+        buyer:{name:qs('#b_name').value, addr:qs('#b_addr').value, ico:qs('#b_ico').value, dic:qs('#b_dic').value, icdph:qs('#b_icdph').value, mail:qs('#b_mail').value},
+        iban:qs('#iban').value, bic:qs('#bic').value, items:state.items, stamp:qs('#stamp_img').src||''
+      };
+    }
+    function fill(d){
+      if(!d) return;
+      qs('#lang').value=d.lang||'sk'; applyLang(qs('#lang').value);
+      qs('#prefix').value=d.prefix||'OF'; qs('#number').value=d.number||''; qs('#currency').value=d.currency||'EUR';
+      qs('#issue').value=d.issue||new Date().toISOString().slice(0,10);
+      qs('#delivery').value=d.delivery||qs('#issue').value; qs('#due_days').value=d.due_days||14; qs('#due').value=d.due||qs('#issue').value; qs('#vs').value=d.vs||d.number||'';
+      qs('#vat_mode').value=d.vat_mode||'nonvat'; qs('#vat_rate').value=d.vat_rate ?? 20; qs('#note').value=d.note||''; qs('#outro').value=d.outro||'';
+      qs('#s_name').value=d.seller?.name||''; qs('#s_addr').value=d.seller?.addr||''; qs('#s_ico').value=d.seller?.ico||''; qs('#s_dic').value=d.seller?.dic||''; qs('#s_icdph').value=d.seller?.icdph||''; qs('#s_mail').value=d.seller?.mail||''; qs('#s_phone').value=d.seller?.phone||'';
+      qs('#b_name').value=d.buyer?.name||''; qs('#b_addr').value=d.buyer?.addr||''; qs('#b_ico').value=d.buyer?.ico||''; qs('#b_dic').value=d.buyer?.dic||''; qs('#b_icdph').value=d.buyer?.icdph||''; qs('#b_mail').value=d.buyer?.mail||'';
+      qs('#iban').value=d.iban||''; qs('#bic').value=d.bic||''; if(d.stamp) qs('#stamp_img').src=d.stamp;
+      state.items = Array.isArray(d.items)? d.items:[];
+      renderItems(); computeTotals();
+    }
+    function persistDraft(){ localStorage.setItem(kDraft(), JSON.stringify(collect())); }
+    function restoreDraft(){ const raw=localStorage.getItem(kDraft()); if(raw){ try{ fill(JSON.parse(raw)); }catch(e){ seed(); } } else { seed(); } }
+
+    function saveIndex(idx){ localStorage.setItem(kIndex(), JSON.stringify(idx)); }
+    function loadIndex(){ try{ return JSON.parse(localStorage.getItem(kIndex()))||[] }catch(e){ return [] } }
+    function fillSavedList(){
+      const list=qs('#saved-list'); const idx=loadIndex();
+      list.innerHTML = idx.length? '' : '<option>— nič uložené —</option>';
+      idx.forEach(it=>{ const o=document.createElement('option'); o.value=it.id; o.textContent=`${it.number} • ${it.buyer||'—'} • ${new Date(it.ts).toLocaleDateString('sk-SK')}`; list.appendChild(o); });
+    }
+    function saveInvoice(){
+      const d=collect(); if(!d.number){ alert('Zadajte číslo faktúry'); return; }
+      const id='inv:'+getLang()+':'+d.number; localStorage.setItem(id, JSON.stringify(d)); { const R=loadRecents(); pushRecent(R.buyers, d.buyer?.name||''); d.items.forEach(it=>pushRecent(R.itemNames, it.name)); saveRecents(R); }
+      const idx=loadIndex(); const ex=idx.find(x=>x.id===id); const row={id, number:d.number, buyer:d.buyer?.name||'', ts:Date.now()};
+      if(ex){ Object.assign(ex,row); } else { idx.unshift(row); }
+      saveIndex(idx); fillSavedList(); setStatus('Faktúra uložená');
+    }
+    function loadInvoiceById(id){ const raw=localStorage.getItem(id); if(!raw) return alert('Záznam nenájdený'); try{ fill(JSON.parse(raw));  setStatus('Načítané'); }catch(e){ alert('Chybný záznam'); } }
+    function deleteInvoice(){ const id=qs('#saved-list').value; if(!id) return; if(confirm('Zmazať faktúru?')){ localStorage.removeItem(id); saveIndex(loadIndex().filter(x=>x.id!==id)); fillSavedList(); setStatus('Zmazané'); } }
+
+    qs('#btn-save-invoice').addEventListener('click', saveInvoice);
+    qs('#btn-load-invoice').addEventListener('click', ()=>{ const id=qs('#saved-list').value; if(id) loadInvoiceById(id); });
+    qs('#btn-delete-invoice').addEventListener('click', deleteInvoice);
+
+    // Header quick buttons
+    qs('#btn-save').addEventListener('click', saveInvoice);
+    qs('#btn-load').addEventListener('click', ()=>{ const id=qs('#saved-list').value; if(id) loadInvoiceById(id); });
+
+    // Seed defaults
+    function seed(){
+      if(!qs('#issue').value){ const t=new Date().toISOString().slice(0,10); qs('#issue').value=t; qs('#delivery').value=t; }
+      if(!qs('#number').value){ const d=new Date(); const n=d.getFullYear().toString()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); qs('#number').value=n; qs('#vs').value=n; }
+      if(state.items.length===0) state.items.push({name:'',desc:'',qty:1,price:0});
+      recalcDue(); renderItems();
+      applyLang('sk');
+    }
+    document.documentElement.lang = (qs('#lang')?.value || 'sk'); CURRENT_LANG = document.documentElement.lang; onLangChange({target:{value:CURRENT_LANG}}); seed(); computeTotals(); setupRecentPush();
+
+    // --------- Minimal QR generator + SPD payload
+        function buildSPD(amount){
+      const acc=(qs('#iban').value||'').replace(/\s+/g,'').toUpperCase();
+      const bic=(qs('#bic').value||'').trim().toUpperCase();
+      const accFull = bic ? `${acc}+${bic}` : acc;
+      const cur=(qs('#currency').value||'EUR').slice(0,3).toUpperCase();
+      const am=Number(amount||0);
+      const amStr = am>0 ? am.toFixed(2) : '';
+      const vs=(qs('#vs').value||'').trim();
+      const lang=document.documentElement.lang||'sk';
+      const prefix=(STR[lang] && STR[lang].msg_prefix) ? STR[lang].msg_prefix : 'Faktúra ';
+      const msg=(prefix + (qs('#number').value||'')).trim().slice(0,60);
+      const rn=(qs('#s_name').value||'').trim().slice(0,35);
+
+      const parts=[`SPD*1.0`,`ACC:${accFull}`];
+      if (amStr) parts.push(`AM:${amStr}`);
+      parts.push(`CC:${cur}`);
+      if (vs) parts.push(`X-VS:${vs}`);
+      if (rn) parts.push(`RN:${rn}`);
+      if (msg) parts.push(`MSG:${msg}`);
+      return parts.join('*');
+    }
+    // Lightweight QR generator
+    function QR8(d){this.d=d;this.b=[];for(var i=0;i<d.length;i++){var c=d.charCodeAt(i);this.b.push(c>255?63:c);}}
+    QR8.prototype={len:function(){return this.b.length},write:function(B){for(var i=0;i<this.b.length;i++){B.put(this.b[i],8)}}};
+    function Buf(){this.buf=[];this.len=0} Buf.prototype.put=function(n,l){for(var i=0;i<l;i++){this.putBit(((n>>(l-i-1))&1)==1)}}; Buf.prototype.putBit=function(bit){if(this.len==this.buf.length*8){this.buf.push(0)} if(bit){this.buf[this.len>>3]|=(0x80>>(this.len%8))} this.len++};
+    function M(n){this.n=n;this.m=null;this.c=0;this.d=[]}
+    M.prototype.add=function(t){this.d.push(new QR8(t))};
+    M.prototype.mk=function(){this.c=17+4*this.n;this.m=new Array(this.c);for(var r=0;r<this.c;r++){this.m[r]=new Array(this.c).fill(null)};this.P(0,0);this.P(this.c-7,0);this.P(0,this.c-7);this.map(this.data())};
+    M.prototype.P=function(r,c){for(var R=-1;R<=7;R++){if(r+R<=-1||this.c<=r+R)continue;for(var C=-1;C<=7;C++){if(c+C<=-1||this.c<=c+C)continue;this.m[r+R][c+C]=( (0<=R&&R<=6&&(C==0||C==6))||(0<=C&&C<=6&&(R==0||R==6))||(2<=R&&R<=4&&2<=C&&C<=4) )}}};
+    M.prototype.data=function(){var B=new Buf();for(var i=0;i<this.d.length;i++){var t=this.d[i];B.put(4,4);B.put(t.len(),8);t.write(B)};for(var i=0;i<4;i++){B.put(0,1)};if(B.len%8!=0){B.put(0,8-B.len%8)};var T=100;var D=new Array(T);for(var i=0;i<B.buf.length;i++){D[i]=B.buf[i]};return D};
+    M.prototype.map=function(D){var inc=-1,row=this.c-1,bit=0;for(var col=this.c-1;col>0;col-=2){if(col==6)col--;for(;;){for(var c=0;c<2;c++){if(this.m[row][col-c]===null){var dark=false;if(bit<D.length*8){dark=((D[Math.floor(bit/8)]>>>(7-bit%8))&1)==1;bit++}this.m[row][col-c]=dark}}row+=inc;if(row<0||this.c<=row){row-=inc;inc=-inc;break}}}};
+    function qrVersionFor(len){
+      const cap=[0,14,26,42,62,84,106,122,152,180,213,251,287,331,362,412,450,504,560,624,666];
+      const need=len+12;
+      let v=4;
+      for(let i=4;i<cap.length;i++){ if(need<=cap[i]){ v=i; break; } }
+      return v;
+    }
+    
+    function drawQR(payload){
+      const el = qs('#qr'); if(!el) return;
+      const url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&ecc=M&data=' + encodeURIComponent(payload);
+      if (el.tagName === 'IMG') {
+        el.src = url;
+        el.alt = 'QR platba';
+      } else {
+        const img = document.createElement('img');
+        img.id = 'qr'; img.width = 256; img.height = 256; img.alt = 'QR platba';
+        img.src = url;
+        el.replaceWith(img);
+      }
+    }
+
+
+    // Initial build of QR
+    drawQR(buildSPD(0));
+  })();
+  </script>
+</body>
+</html>
