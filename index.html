@@ -143,10 +143,6 @@
   .stamp-box .stamp-info{flex:1; min-width:180px;}
   .stamp-box .empty{width:120px; height:80px; display:flex; align-items:center; justify-content:center; border:2px dashed var(--input-line); border-radius:8px; color:var(--muted); font-size:13px; text-align:center;}
   .warn-box{margin-top:10px; padding:12px; border-radius:12px; background:var(--warn-bg); border:2px solid var(--warn-line); color:var(--warn-ink); font-size:16px;}
-  .mail-panel{margin-top:12px; padding:14px; border-radius:14px; background:var(--brand-bg); border:2px solid var(--brand); font-size:16px;}
-  .mail-panel[hidden]{display:none;}
-  .mail-panel .mp-title{font-size:19px; font-weight:800; margin-bottom:6px;}
-  .mail-panel .mp-line{margin:3px 0; word-break:break-word;}
   .saved-msg{display:none; margin-top:10px; padding:12px; border-radius:12px; background:var(--green-bg); color:var(--green); font-weight:700;}
 
   /* ===== A4 náhľad (rovnaký ako originál) ===== */
@@ -490,17 +486,8 @@
 
       <div style="margin-top:20px">
         <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
-        <button type="button" class="btn big" id="btn-mail" style="margin-top:10px">📧 Uložiť a poslať e-mailom</button>
         <div class="saved-msg" id="saved_msg"></div>
         <button type="button" class="btn big primary" id="wz-again" hidden style="margin-top:10px">↺ Ďalšia faktúra</button>
-        <div class="mail-panel" id="mail_panel" hidden>
-          <div class="mp-title">📧 E-mail je pripravený</div>
-          <div class="mp-line">Predmet: <b id="mail_subj"></b></div>
-          <div class="mp-line">Príloha: <b id="mail_file"></b></div>
-          <button type="button" class="btn big primary" id="btn-mail-open" style="margin-top:12px">📧 Otvoriť e-mail s faktúrou</button>
-          <div class="hint" id="mail_hint" style="margin-top:8px"></div>
-          <button type="button" class="btn small ghost" id="btn-mail-close" style="margin-top:6px">Zavrieť</button>
-        </div>
         <div class="warn-box" id="backup_warn" style="display:none">
           Odporúčam stiahnuť si zálohu faktúr (raz za mesiac), aby sa nestratili, ak by sa niečo stalo s mobilom/počítačom.
           <div style="margin-top:8px"><button type="button" class="btn small" data-act="backup">⬇️ Stiahnuť zálohu teraz</button></div>
@@ -1547,7 +1534,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function refresh(persist=true){
     syncVS(); updateStatus(); renderView();
-    if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; qs('#mail_panel').hidden=true; }
+    if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; }
   }
 
   // ---------- udalosti ----------
@@ -1636,48 +1623,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   qs('#btn-save-pdf').onclick=async ()=>{ if(doSave()){ await exportPDF(); } };
   qs('#btn-save-only').onclick=()=>{ doSave(); };
 
-  // ===== Odoslanie e-mailom – cez vlastnú e-mailovú aplikáciu (odíde z tvojej adresy, bez hesla) =====
-  let mailReady=null;
-  const MONTHS_DE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  function mailTexts(){
-    const f=getFlat(), t=totals(), num=norm(f.number);
-    const pf=parseIso(f.period_from), name=(norm(f.pay_name) || (f.s_party||'').split('\n')[0] || '').trim();
-    const per = pf? (MONTHS[pf.getMonth()]+' '+pf.getFullYear()) : (fmtDate(f.period_from)+' – '+fmtDate(f.period_to));
-    const perDe = pf? (MONTHS_DE[pf.getMonth()]+' '+pf.getFullYear()) : per;
-    const sum=money(t.total)+' EUR';
-    const subject='Faktúra '+num+' / Rechnung '+num;
-    const body='Dobrý deň,\n\nv prílohe posielam faktúru č. '+num+' za '+per+' na sumu '+sum+'.\n\n'
-      +'Sehr geehrte Damen und Herren,\n\nanbei sende ich Ihnen die Rechnung Nr. '+num+' für '+perDe+' über '+sum+'.\n\n'
-      +'S pozdravom / Mit freundlichen Grüßen\n'+name;
-    return {subject, body};
-  }
-  const canShareFiles=()=>{ try{ return !!(navigator.canShare && navigator.canShare({files:[new File(['x'],'t.pdf',{type:'application/pdf'})]})); }catch(e){ return false; } };
-  qs('#btn-mail').onclick=async ()=>{
-    if(!doSave()) return;
-    const b=qs('#btn-mail'); b.disabled=true; b.textContent='⏳ Pripravujem PDF…';
-    try{
-      const pdf=await buildPDF(), m=mailTexts();
-      mailReady={...m, name:fileName()+'.pdf', blob: pdf? pdf.output('blob') : null, pdf};
-      qs('#mail_subj').textContent = m.subject; qs('#mail_file').textContent = mailReady.name;
-      qs('#mail_hint').innerHTML = canShareFiles()
-        ? 'Po ťuknutí vyber <b>Mail</b> alebo <b>Gmail</b>. PDF bude priložené, adresáta vyberieš v e-maile (pole <b>Komu</b>).'
-        : 'Otvorí sa tvoj e-mail s predmetom a textom – adresáta doplň v poli <b>Komu</b>. PDF sa zároveň stiahne – <b>pripoj ho</b> k e-mailu (ikona 📎 / „Pripojiť súbor“).';
-      qs('#mail_panel').hidden=false; qs('#mail_panel').scrollIntoView({behavior:'smooth', block:'center'});
-    } finally { b.disabled=false; b.textContent='📧 Uložiť a poslať e-mailom'; }
-  };
-  qs('#btn-mail-open').onclick=()=>{
-    const m=mailReady; if(!m) return;
-    if(m.blob && canShareFiles()){
-      const file=new File([m.blob], m.name, {type:'application/pdf'});
-      navigator.share({files:[file], title:m.subject, text:m.body}).catch(err=>{ if(err && err.name!=='AbortError') mailtoFallback(m); });
-    } else mailtoFallback(m);
-  };
-  function mailtoFallback(m){
-    if(m.pdf) m.pdf.save(m.name);
-    const enc=encodeURIComponent;
-    location.href='mailto:?subject='+enc(m.subject)+'&body='+enc(m.body+'\n\n(Faktúra je v prílohe ako PDF.)');
-  }
-  qs('#btn-mail-close').onclick=()=>{ qs('#mail_panel').hidden=true; };
   qs('#btn-mbar-save').onclick=()=>qs('#btn-save-pdf').onclick();
   let prevZoomed=false;
   qs('#btn-zoom-prev').onclick=()=>{ prevZoomed=!prevZoomed; qs('#btn-zoom-prev').textContent=prevZoomed?'🔍 Zmenšiť':'🔍 Zväčšiť'; if(prevZoomed) fitReset(); else fitPreview(); };
@@ -1855,7 +1800,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     month:['Za ktorý mesiac?','Ťukni na mesiac – všetky dátumy sa nastavia samé.'],
     site:['Na akej stavbe?','Ak je stavba rovnaká ako minule, stlač <b>✓ Nechať tak</b>.'],
     price:['Koľko fakturuješ?','Suma v eurách (bez DPH). Dá sa vypočítať aj z hodín 🧮.'],
-    check:['Skontroluj faktúru','Ak je všetko v poriadku, ulož ju alebo pošli e-mailom.'],
+    check:['Skontroluj faktúru','Ak je všetko v poriadku, ulož ju a stiahni PDF.'],
     archive:['Staršie faktúry','Uložené faktúry, kôš a zálohy.'],
     settings:['Nastavenia a zálohy','Ktoré polia sa menia, pevné polia, zálohy.'],
   };
