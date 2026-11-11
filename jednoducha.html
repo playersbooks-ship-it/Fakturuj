@@ -43,19 +43,33 @@
   .status.done{background:var(--green-bg); color:var(--green); border-color:var(--green-line);}
   .status small{display:block; font-weight:400; font-size:16px; margin-top:4px; color:var(--ink);}
 
-  .steps{margin:0 0 14px; padding-left:22px; font-size:17px; color:var(--label);}
-  .steps li{margin:3px 0;}
-  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:15px; margin-bottom:12px;}
-  .legend span{display:inline-flex; align-items:center; gap:6px;}
-  .legend i{display:inline-block; width:18px; height:18px; border-radius:5px; border:2px solid;}
+  .intro h2{margin:0 0 4px;}
+  .intro p{margin:0 0 14px; font-size:17px; color:var(--label); line-height:1.45;}
+  .status{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;}
+  .status #status_txt{flex:1 1 260px;}
+  .status.done .goto-btn{display:none;}
+  .goto-btn{border-color:var(--red-line); color:var(--red); background:var(--surface); font-weight:600;}
+
+  /* sekcie formulára */
+  .sec{background:var(--surface-2); border:1px solid var(--line); border-radius:14px; padding:14px 14px 2px; margin-bottom:14px; position:relative;}
+  .sec.has-need{border-color:var(--red-line);}
+  .sec-h{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-weight:700; font-size:18px; margin-bottom:12px;}
+  .sec-badge:empty{display:none;}
+  .sec-badge{font-size:14px; font-weight:600; border-radius:999px; padding:3px 10px; border:1px solid;}
+  .sec-badge.need{color:var(--red); background:var(--red-bg); border-color:var(--red-line);}
+  .sec-badge.done{color:var(--green); background:var(--green-bg); border-color:var(--green-line);}
+  .sec .item{background:var(--surface);}
+  .sec #add-row{margin-bottom:14px;}
+  .fld.flash{animation:flash 1.2s ease-out;}
+  @keyframes flash{0%{box-shadow:0 0 0 6px var(--red-line); border-radius:12px;} 100%{box-shadow:0 0 0 0 transparent;}}
+  .mbar-st.need{cursor:pointer;}
 
   .fld{margin-bottom:14px; min-width:0;}
   .grid{display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:0 12px;}
   .col-12{grid-column:span 12;} .col-8{grid-column:span 8;} .col-6{grid-column:span 6;} .col-4{grid-column:span 4;}
   @media (max-width: 1250px) and (min-width: 1001px){ .grid .col-4[data-key]{grid-column:span 12;} }
   @media (max-width: 640px){ .grid .col-8, .grid .col-6, .grid .col-4{grid-column:span 12;} .grid .grid .col-6{grid-column:span 6;} }
-  .hr{border:none; border-top:1px solid var(--line); margin:6px 0 14px;}
-  label.chk{display:flex !important; align-items:center; gap:10px; font-weight:400 !important; cursor:pointer;}
+    label.chk{display:flex !important; align-items:center; gap:10px; font-weight:400 !important; cursor:pointer;}
   .fld > label{display:block; font-size:16px; font-weight:600; margin-bottom:6px; color:var(--label);}
   input,select,textarea{width:100%; box-sizing:border-box; padding:12px 14px; border:2px solid var(--input-line); border-radius:12px; font:inherit; font-size:18px; background:var(--input-bg); color:var(--ink);}
   textarea{min-height:70px; resize:vertical;}
@@ -151,9 +165,11 @@
     .mbar-st.need{color:var(--red);} .mbar-st.done{color:var(--green);}
   }
   @media (max-width: 600px){
-    .panel{padding:14px 12px; border-radius:14px; font-size:17px;}
+    .panel{padding:12px 10px; border-radius:14px; font-size:17px;}
     .panel h2{font-size:21px;}
-    .steps{font-size:16px; padding-left:20px;}
+    .intro p{font-size:16px;}
+    .sec{padding:12px 10px 2px; border-radius:12px;}
+    .sec-h{font-size:17px;}
     .status{font-size:18px; padding:12px;}
     .status small{font-size:15px;}
     .acts .btn{flex:1 1 auto;}
@@ -191,20 +207,19 @@
         <button type="button" class="btn load-btn" id="btn-new">📂 Načítať poslednú faktúru</button>
         <div class="hint" id="last_info"></div>
       </div>
-      <h2>Nová faktúra</h2>
-      <ol class="steps">
-        <li>Zmeň všetky <b style="color:var(--red)">červené</b> polia.</li>
-        <li>Keď je pole <b style="color:var(--green)">zelené</b>, je hotové.</li>
-        <li>Na konci stlač modré tlačidlo <b>Uložiť a stiahnuť PDF</b>.</li>
-      </ol>
-      <div class="legend">
-        <span><i style="border-color:var(--red-line);background:var(--red-bg)"></i> treba zmeniť</span>
-        <span><i style="border-color:var(--green-line);background:var(--green-bg)"></i> zmenené / hotovo</span>
+      <div class="intro">
+        <h2>Nová faktúra</h2>
+        <p>Zmeň <b style="color:var(--red)">červené</b> polia – keď <b style="color:var(--green)">zozelenajú</b>, sú hotové. Nakoniec stlač <b>Uložiť a stiahnuť PDF</b>.</p>
       </div>
 
-      <div id="status" class="status need">…</div>
+      <div id="status" class="status need">
+        <div id="status_txt">…</div>
+        <button type="button" class="btn small goto-btn" data-act="goto-next">👉 Ukáž, čo ešte zmeniť</button>
+      </div>
 
-      <div class="grid">
+      <section class="sec">
+        <div class="sec-h"><span>📄 1. Číslo faktúry</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-4 fld"><label>Prefix</label><input id="prefix" value="faktura" readonly></div>
         <div class="col-8 fld" data-key="number">
           <label>Číslo / Nummer</label>
@@ -215,9 +230,11 @@
             <button type="button" class="btn small okk only-need" data-ok="number">✓ Nechať tak</button>
           </div>
         </div>
-
-        <div class="col-12"><hr class="hr"></div>
-
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>🏢 2. Dodávateľ a odberateľ</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-6">
           <div class="fld"><label>Dodávateľ / Lieferant</label><textarea id="s_party" placeholder="Meno, adresa…"></textarea></div>
           <div class="grid">
@@ -234,14 +251,17 @@
             <div class="col-12 fld"><label>IČ DPH</label><input id="b_icdph"></div>
           </div>
         </div>
-
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>🏗️ 3. Stavba a obdobie</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-12 fld" data-key="site_name">
           <label>Stavba / Baustelle</label>
           <input id="site_name" placeholder="Názov stavby">
           <div class="hint"></div>
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="site_name">✓ Nechať tak</button></div>
         </div>
-
         <div class="col-6 fld" data-key="period_from">
           <label>Obdobie od / Zeitraum von</label>
           <input id="period_from" type="date">
@@ -258,7 +278,11 @@
           <div class="hint"></div>
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="period_to">✓ Nechať tak</button></div>
         </div>
-
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>📅 4. Dátumy</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-4 fld" data-key="issue">
           <label>Vystavená / Ausgestellt</label>
           <input id="issue" type="date">
@@ -286,7 +310,11 @@
             <button type="button" class="btn small okk only-need" data-ok="due">✓ Nechať tak</button>
           </div>
         </div>
-
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>💶 5. Mena, DPH a VS</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-4 fld"><label>Mena / Währung</label>
           <select id="currency"><option value="EUR" selected>EUR</option><option value="CZK">CZK</option><option value="PLN">PLN</option></select>
         </div>
@@ -297,14 +325,21 @@
           <div class="hint"></div>
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="vs">✓ Nechať tak</button></div>
         </div>
-
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>🧾 6. Položky</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-12">
-          <div class="h3">Položky / Positionen</div>
           <div id="items_edit"></div>
           <button type="button" class="btn small" id="add-row">+ Pridať ďalšiu položku</button>
         </div>
-
-        <div class="col-12 fld" data-key="outro_bi" style="margin-top:12px">
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>✍️ 7. Texty na faktúre</span><span class="sec-badge"></span></div>
+        <div class="grid">
+        <div class="col-12 fld" data-key="outro_bi">
           <label>Text po faktúre / Hinweis</label>
           <textarea id="outro_bi"></textarea>
           <div class="hint"></div>
@@ -316,8 +351,11 @@
           <div class="hint"></div>
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="addendum_bi">✓ Nechať tak</button></div>
         </div>
-
-        <div class="col-12"><hr class="hr"><div class="h3" style="margin-top:4px">Platba / Zahlung</div></div>
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>🏦 8. Platba</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-6 fld"><label>Prijímateľ / Empfänger</label><input id="pay_name"></div>
         <div class="col-6 fld"><label>IBAN</label><input id="pay_iban"></div>
         <div class="col-6 fld"><label>BIC</label><input id="pay_bic"></div>
@@ -330,8 +368,11 @@
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="pay_msg">✓ Nechať tak</button></div>
         </div>
         <div class="col-12 fld"><label class="chk"><input type="checkbox" id="show_qr" checked> Zobraziť QR kód</label></div>
-
-        <div class="col-12"><hr class="hr"><div class="h3" style="margin-top:4px">Pečiatka / Stempel</div></div>
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>🔏 9. Pečiatka</span><span class="sec-badge"></span></div>
+        <div class="grid">
         <div class="col-12">
           <div class="stamp-box">
             <img id="stamp_thumb" alt="Pečiatka" style="display:none"><div class="empty" id="stamp_empty">bez pečiatky</div>
@@ -344,7 +385,8 @@
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
       <div style="margin-top:20px">
         <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
@@ -603,13 +645,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   const WATCHABLE=[
     {key:'number', label:'Číslo faktúry'},
+    {key:'site_name', label:'Stavba'},
     {key:'period_from', label:'Obdobie od'},
     {key:'period_to', label:'Obdobie do'},
     {key:'issue', label:'Dátum vystavenia'},
     {key:'delivery', label:'Dátum dodania'},
     {key:'due', label:'Dátum splatnosti'},
     {key:'vs', label:'Variabilný symbol'},
-    {key:'site_name', label:'Stavba'},
     {key:'pay_msg', label:'Správa pre prijímateľa'},
     {key:'outro_bi', label:'Text pod faktúrou'},
     {key:'addendum_bi', label:'Dodatok'},
@@ -618,10 +660,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     {key:'item_name', label:'Položky – názov'},
     {key:'item_desc', label:'Položky – popis'},
   ];
-  const DEFAULT_WATCH=['number','period_from','period_to','issue','delivery','due','item_qty'];
+  const DEFAULT_WATCH=['number','site_name','period_from','period_to','issue','delivery','due','item_qty'];
   const DATE_KEYS=new Set(['period_from','period_to','issue','delivery','due']);
   let watch=new Set(DEFAULT_WATCH);
   try{ const w=JSON.parse(lsGet(WATCH_KEY)||'null'); if(Array.isArray(w)) watch=new Set(w); }catch(e){}
+  // jednorazovo: Stavba sa má tiež meniť (pridané neskôr) – doplň ju aj do uložených nastavení
+  if(!lsGet('simple_watch_mig_site')){ watch.add('site_name'); lsSet(WATCH_KEY, JSON.stringify([...watch])); lsSet('simple_watch_mig_site','1'); }
 
   // ---------- stav ----------
   // base = údaje z predošlej faktúry (vzor), s ktorými sa porovnáva
@@ -739,17 +783,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     // suma platby
     qs('#pay_amount_fld').style.display = qs('#pay_use_total').checked ? 'none' : '';
 
-    const st=qs('#status');
+    const st=qs('#status'), stt=qs('#status_txt');
     if(missing.length){
       st.className='status need';
-      st.innerHTML='Zostáva zmeniť: '+missing.length+(missing.length===1?' pole':missing.length<5?' polia':' polí')+'<small>'+esc(missing.join(', '))+'</small>';
+      stt.innerHTML='Zostáva zmeniť: '+missing.length+(missing.length===1?' pole':missing.length<5?' polia':' polí')+'<small>'+esc(missing.join(', '))+'</small>';
     }else{
       st.className='status done';
-      st.innerHTML='✓ Všetko je hotové<small>Skontroluj náhľad a stlač „Uložiť a stiahnuť PDF“.</small>';
+      stt.innerHTML='✓ Všetko je hotové<small>Skontroluj náhľad a stlač „Uložiť a stiahnuť PDF“.</small>';
     }
+    // odznak pri každej sekcii: koľko polí v nej ešte treba zmeniť
+    qsa('#editor .sec').forEach(sec=>{
+      const need=sec.querySelectorAll('.fld.need').length, watched=need+sec.querySelectorAll('.fld.done').length;
+      const b=sec.querySelector('.sec-badge');
+      sec.classList.toggle('has-need', need>0);
+      if(need){ b.className='sec-badge need'; b.textContent='✏️ zmeniť: '+need; }
+      else if(watched){ b.className='sec-badge done'; b.textContent='✓ hotovo'; }
+      else { b.className='sec-badge'; b.textContent=''; }
+    });
     const mb=qs('#mbar_st');
     mb.className='mbar-st '+(missing.length?'need':'done');
-    mb.textContent= missing.length ? '✏️ Zostáva zmeniť: '+missing.length : '✓ Všetko hotové';
+    mb.textContent= missing.length ? '✏️ Zostáva zmeniť: '+missing.length+'  ·  👉 ukáž' : '✓ Všetko hotové';
     return missing;
   }
 
@@ -922,6 +975,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     else if(act==='purge'){ const id=+b.closest('[data-tid]').dataset.tid; if(confirm('Natrvalo vymazať túto faktúru z koša? Toto sa už nedá vrátiť.')){ lsSet(TRASH_KEY, JSON.stringify(readJSON(TRASH_KEY,[]).filter(x=>x.id!==id))); renderArchive(); } return; }
     else if(act==='snap'){ const i=+b.dataset.i; const s=readJSON(SNAP_KEY,[])[i]; if(!s) return; let arr=[]; try{ arr=JSON.parse(s.data); }catch(e){} if(confirm('Vrátiť zoznam faktúr do stavu z '+new Date(s.ts).toLocaleString('sk-SK')+' ('+arr.length+' faktúr)?\nAktuálny stav sa tiež odloží.')){ saveAll(arr); renderArchive(); } return; }
     else if(act==='backup'){ downloadBackup(); return; }
+    else if(act==='goto-next'){ gotoNext(); return; }
     else return;
     refresh();
   });
@@ -1098,6 +1152,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       pdf.save(fileName()+'.pdf');
     } finally { document.body.classList.remove('exporting'); fitPreview(); }
   }
+
+  // posunie stránku na ďalšie (najbližšie nižšie) červené pole a krátko ho zvýrazní
+  function gotoNext(){
+    const all=qsa('#editor .fld.need'); if(!all.length) return;
+    const y=(window.scrollY||0)+120;
+    const el=all.find(f=>f.getBoundingClientRect().top+window.scrollY>y+10) || all[0];
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+    if(!matchMedia('(pointer:coarse)').matches){ const inp=el.querySelector('input,textarea'); if(inp) setTimeout(()=>inp.focus({preventScroll:true}),350); }
+  }
+  qs('#mbar_st').onclick=()=>{ if(qs('#mbar_st').classList.contains('need')) gotoNext(); };
 
   // ---------- tmavý / svetlý režim ----------
   const THEME_KEY='simple_theme_v1';
