@@ -82,6 +82,9 @@
   .arch-row .info{flex:1; min-width:180px;}
   .watch-list label{display:flex; align-items:center; gap:10px; padding:5px 0; font-size:17px;}
 
+  .top-load{margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--line);}
+  .load-btn{width:100%; padding:14px; font-size:19px; font-weight:700; border-color:var(--brand); color:var(--brand); background:#f5f8ff;}
+  .load-btn:hover{background:#eaf0ff;}
   .warn-box{margin-top:10px; padding:12px; border-radius:12px; background:#fffbeb; border:2px solid #f59e0b; color:#92400e; font-size:16px;}
   .saved-msg{display:none; margin-top:10px; padding:12px; border-radius:12px; background:var(--green-bg); color:var(--green); font-weight:700;}
 
@@ -129,7 +132,6 @@
     .status small{font-size:15px;}
     .acts .btn{flex:1 1 auto;}
     .end-acts{display:grid !important; grid-template-columns:1fr 1fr;}
-    .end-acts .btn:last-child{grid-column:1 / -1;}
     .item{padding:10px 8px;}
     details.box > .inner{padding:4px 10px 14px;}
     .arch-row .btn{flex:1 1 auto;}
@@ -155,6 +157,10 @@
   <!-- ================= EDITOR ================= -->
   <div id="editor">
     <div class="panel">
+      <div class="top-load">
+        <button type="button" class="btn load-btn" id="btn-new">📂 Načítať poslednú faktúru</button>
+        <div class="hint" id="last_info"></div>
+      </div>
       <h2>Nová faktúra</h2>
       <ol class="steps">
         <li>Zmeň všetky <b style="color:var(--red)">červené</b> polia.</li>
@@ -306,7 +312,6 @@
         <div class="acts end-acts" style="margin-top:10px">
           <button type="button" class="btn" id="btn-save-only">💾 Len uložiť</button>
           <button type="button" class="btn" id="btn-print">🖨️ Vytlačiť</button>
-          <button type="button" class="btn" id="btn-new">↺ Začať odznova (podľa poslednej)</button>
         </div>
       </div>
 
@@ -869,7 +874,12 @@
   });
 
   qs('#add-row').onclick=()=>{ const last=state.items[state.items.length-1]||{}; state.items.push({name:last.name||'',desc:'',qty:'',price:last.price||0}); renderEditItems(); refresh(); };
-  qs('#btn-new').onclick=()=>{ if(!confirm('Začať odznova? Neuložené zmeny sa stratia a všetko sa vyplní podľa poslednej uloženej faktúry.')) return; lsDel(DRAFT_KEY); loadTemplate(latestRow()); };
+  qs('#btn-new').onclick=()=>{
+    const r=latestRow();
+    if(!r){ alert('Zatiaľ nie je uložená žiadna faktúra.'); return; }
+    if(lsGet(DRAFT_KEY) && !confirm('Načítať poslednú faktúru ('+(r.number||'')+')?\nRozpracované zmeny sa stratia.')) return;
+    lsDel(DRAFT_KEY); loadTemplate(r); window.scrollTo({top:0, behavior:'smooth'});
+  };
   qs('#btn-print').onclick=()=>{ setTitle(); fitReset(); setTimeout(()=>{ window.print(); fitPreview(); },50); };
   // uloží faktúru do zoznamu; vráti true, ak sa podarilo
   function doSave(){
@@ -946,6 +956,8 @@
     const parts=Object.entries(per).map(([c,v])=>money(v)+' '+c);
     qs('#arch_totals').textContent = parts.length? 'Spolu všetky faktúry: '+parts.join(' | ') : '';
     qs('#arch_count').textContent = list.length ? '('+list.length+')' : '';
+    const lr=latestRow();
+    qs('#last_info').innerHTML = lr ? 'Posledná uložená: <b>'+esc(lr.number||'(bez čísla)')+'</b>'+(lr.issue?' · '+esc(fmtDate(lr.issue)):'') : 'Zatiaľ nie je uložená žiadna faktúra.';
 
     // kôš
     const tr=readJSON(TRASH_KEY,[]);
