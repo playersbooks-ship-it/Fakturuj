@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faktúra – jednoduchá</title>
+<style>
+  :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f9fafb; --brand:#2563eb;
+         --red:#d65a5a; --red-bg:#fff7f7; --green:#3f9a62; --green-bg:#f6fcf8;
+         --red-line:#f0a3a3; --green-line:#9fd5b2; }
+  html,body{height:100%;}
+  body{margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial; color:var(--ink); background:#f3f4f6;}
+  .muted{color:var(--muted);} .right{text-align:right;}
+
+  /* ===== Editor (jednoduché UI) ===== */
+  .wrap{display:grid; grid-template-columns: minmax(420px, 700px) 1fr; gap:20px; padding:16px; max-width:1500px; margin:0 auto;}
+  @media (max-width: 1000px){ .wrap{grid-template-columns:1fr; padding:10px;} }
+  .panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; font-size:18px;}
+  .panel h2{margin:0 0 12px; font-size:22px;}
+  .panel + .panel{margin-top:16px;}
+
+  .status{border-radius:14px; padding:14px 16px; font-size:20px; font-weight:700; margin-bottom:16px; border:2px solid;}
+  .status.need{background:var(--red-bg); color:var(--red); border-color:var(--red-line);}
+  .status.done{background:var(--green-bg); color:var(--green); border-color:var(--green-line);}
+  .status small{display:block; font-weight:400; font-size:16px; margin-top:4px; color:var(--ink);}
+
+  .steps{margin:0 0 14px; padding-left:22px; font-size:17px; color:#374151;}
+  .steps li{margin:3px 0;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:15px; margin-bottom:12px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{display:inline-block; width:18px; height:18px; border-radius:5px; border:2px solid;}
+
+  .fld{margin-bottom:14px; min-width:0;}
+  .grid{display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:0 12px;}
+  .col-12{grid-column:span 12;} .col-8{grid-column:span 8;} .col-6{grid-column:span 6;} .col-4{grid-column:span 4;}
+  @media (max-width: 1250px) and (min-width: 1001px){ .grid .col-4[data-key]{grid-column:span 12;} }
+  @media (max-width: 640px){ .grid .col-8, .grid .col-6, .grid .col-4{grid-column:span 12;} .grid .grid .col-6{grid-column:span 6;} }
+  .hr{border:none; border-top:1px solid var(--line); margin:6px 0 14px;}
+  label.chk{display:flex !important; align-items:center; gap:10px; font-weight:400 !important; cursor:pointer;}
+  .fld > label{display:block; font-size:16px; font-weight:600; margin-bottom:6px; color:#374151;}
+  input,select,textarea{width:100%; box-sizing:border-box; padding:12px 14px; border:2px solid #d1d5db; border-radius:12px; font:inherit; font-size:18px; background:#fff;}
+  textarea{min-height:70px; resize:vertical;}
+  input[readonly]{background:#f3f4f6; color:var(--muted);}
+  input[type=checkbox]{width:22px; height:22px; vertical-align:middle;}
+
+  .fld.need input,.fld.need textarea,.fld.need select{border:2px solid var(--red-line); background:var(--red-bg);}
+  .fld.done input,.fld.done textarea,.fld.done select{border:2px solid var(--green-line); background:var(--green-bg);}
+  .fld.need > label::after{content:"  ✏️ zmeň"; color:var(--red); font-weight:600;}
+  .fld.done > label::after{content:"  ✓ hotovo"; color:var(--green); font-weight:600;}
+  .hint{font-size:15px; color:var(--muted); margin-top:5px;}
+  .hint b{color:var(--ink);}
+  .acts{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+
+  .btn{border:2px solid #d1d5db; background:#fff; color:var(--ink); padding:10px 16px; border-radius:12px; font:inherit; font-size:17px; cursor:pointer;}
+  .btn:hover{background:#f9fafb;}
+  .btn.small{padding:6px 12px; font-size:15px; border-radius:10px;}
+  .btn.big{width:100%; padding:18px; font-size:21px; font-weight:800; border-radius:14px;}
+  .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff;}
+  .btn.primary:hover{background:#1d4ed8;}
+  .btn.okk{border-color:var(--green-line); color:var(--green);}
+  .btn.ghost{border-color:transparent; color:var(--muted);}
+  .btn.danger{color:var(--red); border-color:#fecaca;}
+  .fld:not(.need) .only-need{display:none;}
+
+  .item{border:2px dashed #d1d5db; border-radius:14px; padding:12px; margin-bottom:12px;}
+  .item-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .item-head .sp{flex:1;}
+  .item:not(.has-need) .only-need{display:none;}
+  .g2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width: 520px){ .g2{grid-template-columns:1fr;} }
+  .item-sum{text-align:right; font-size:17px;}
+
+  details.box{border:1px solid var(--line); border-radius:14px; margin-top:14px; background:#fafafa;}
+  details.box > summary{cursor:pointer; padding:14px 16px; font-size:18px; font-weight:700; list-style:none;}
+  details.box > summary::before{content:"▶ "; color:var(--muted);}
+  details.box[open] > summary::before{content:"▼ ";}
+  details.box > .inner{padding:4px 16px 16px;}
+  .sub-note{font-size:15px; color:var(--muted); margin:0 0 12px;}
+  .h3{font-weight:700; margin:16px 0 8px; font-size:17px;}
+
+  .arch-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 0; border-top:1px solid var(--line); font-size:16px;}
+  .arch-row .info{flex:1; min-width:180px;}
+  .watch-list label{display:flex; align-items:center; gap:10px; padding:5px 0; font-size:17px;}
+
+  .top-load{margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--line);}
+  .load-btn{width:100%; padding:14px; font-size:19px; font-weight:700; border-color:var(--brand); color:var(--brand); background:#f5f8ff;}
+  .load-btn:hover{background:#eaf0ff;}
+  .warn-box{margin-top:10px; padding:12px; border-radius:12px; background:#fffbeb; border:2px solid #f59e0b; color:#92400e; font-size:16px;}
+  .saved-msg{display:none; margin-top:10px; padding:12px; border-radius:12px; background:var(--green-bg); color:var(--green); font-weight:700;}
+
+  /* ===== A4 náhľad (rovnaký ako originál) ===== */
+  #preview{background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; align-self:start; position:sticky; top:16px;}
+  @media (max-width: 1000px){ #preview{position:static;} }
+  #preview > .head{padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; background:var(--bg); font-size:18px;}
+  #prev_box{overflow:hidden;}
+  #invoice{ width:210mm; min-height:297mm; padding:12mm; box-sizing:border-box; margin:0 auto; background:#fff; font-size:16px;}
+  #invoice table{width:100%; border-collapse: collapse;}
+  #invoice th, #invoice td{padding:8px; vertical-align: top;}
+  #invoice thead th{ background:#f3f4f6; color:#374151; font-weight:600; font-size:12px; border-bottom:1px solid var(--line); }
+  #invoice tbody td{ border-top:1px solid var(--line); }
+  .sep{ border-top:1px dashed var(--line); margin:10px 0; }
+  #view_items th + th, #view_items td + td { border-left:1px dashed var(--line); }
+  #view_items th, #view_items td { padding-left:8px; padding-right:8px; }
+
+  /* ===== Mobil ===== */
+  input[type=date]{min-height:52px; -webkit-appearance:none; appearance:none;}
+  .mbar, #btn-close-prev, #btn-zoom-prev{display:none;}
+  @media (max-width: 1000px){
+    .wrap{padding:8px 8px 110px; gap:12px;}
+    #preview{display:none;}
+    body.show-prev{overflow:hidden;}
+    body.show-prev #preview{display:block; position:fixed; inset:0; z-index:50; border:none; border-radius:0; overflow:auto; background:#e5e7eb;}
+    body.show-prev #preview > .head{position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    body.show-prev #btn-close-prev{display:inline-block;}
+    body.show-prev #prev_box{padding:8px 8px 130px; box-sizing:border-box; overflow:auto;}
+    body.show-prev #btn-zoom-prev{display:inline-block;}
+    #preview > .head .btn{white-space:nowrap; padding:6px 10px;}
+    body.exporting #preview{display:block; position:absolute; left:-10000px; top:0; width:820px;}
+    .mbar{display:flex; flex-direction:column; gap:6px; position:fixed; left:0; right:0; bottom:0; z-index:60;
+          padding:8px 10px calc(10px + env(safe-area-inset-bottom)); background:#fff; border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.08);}
+    .mbar .row{display:flex; gap:8px;}
+    .mbar .btn{flex:1; padding:14px 8px; font-weight:700; font-size:18px;}
+    .mbar .btn.primary{flex:1.6;}
+    .mbar-st{font-size:15px; font-weight:700; text-align:center;}
+    .mbar-st.need{color:var(--red);} .mbar-st.done{color:var(--green);}
+  }
+  @media (max-width: 600px){
+    .panel{padding:14px 12px; border-radius:14px; font-size:17px;}
+    .panel h2{font-size:21px;}
+    .steps{font-size:16px; padding-left:20px;}
+    .status{font-size:18px; padding:12px;}
+    .status small{font-size:15px;}
+    .acts .btn{flex:1 1 auto;}
+    .end-acts{display:grid !important; grid-template-columns:1fr 1fr;}
+    .item{padding:10px 8px;}
+    details.box > .inner{padding:4px 10px 14px;}
+    .arch-row .btn{flex:1 1 auto;}
+    #btn-save-pdf{display:none;}           /* na mobile je v spodnej lište */
+  }
+
+  @media print{
+    #preview{display:block !important; position:static !important;}
+    .mbar{display:none !important;}
+    @page{ size:A4; margin:0 }
+    body{ margin:0; background:#fff; }
+    .wrap{ display:block; padding:0; }
+    #editor{ display:none }
+    #preview{ border:none; border-radius:0; position:static; }
+    #preview > .head{ display:none }
+    #invoice{ zoom:1 !important; width:210mm; min-height:297mm; padding:12mm; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= EDITOR ================= -->
+  <div id="editor">
+    <div class="panel">
+      <div class="top-load">
+        <button type="button" class="btn load-btn" id="btn-new">📂 Načítať poslednú faktúru</button>
+        <div class="hint" id="last_info"></div>
+      </div>
+      <h2>Nová faktúra</h2>
+      <ol class="steps">
+        <li>Zmeň všetky <b style="color:var(--red)">červené</b> polia.</li>
+        <li>Keď je pole <b style="color:var(--green)">zelené</b>, je hotové.</li>
+        <li>Na konci stlač modré tlačidlo <b>Uložiť a stiahnuť PDF</b>.</li>
+      </ol>
+      <div class="legend">
+        <span><i style="border-color:var(--red-line);background:var(--red-bg)"></i> treba zmeniť</span>
+        <span><i style="border-color:var(--green-line);background:var(--green-bg)"></i> zmenené / hotovo</span>
+      </div>
+
+      <div id="status" class="status need">…</div>
+
+      <div class="grid">
+        <div class="col-4 fld"><label>Prefix</label><input id="prefix" value="faktura" readonly></div>
+        <div class="col-8 fld" data-key="number">
+          <label>Číslo / Nummer</label>
+          <input id="number" placeholder="2025-001">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="next-number" hidden></button>
+            <button type="button" class="btn small okk only-need" data-ok="number">✓ Nechať tak</button>
+          </div>
+        </div>
+
+        <div class="col-12"><hr class="hr"></div>
+
+        <div class="col-6">
+          <div class="fld"><label>Dodávateľ / Lieferant</label><textarea id="s_party" placeholder="Meno, adresa…"></textarea></div>
+          <div class="grid">
+            <div class="col-6 fld"><label>IČO</label><input id="s_ico"></div>
+            <div class="col-6 fld"><label>DIČ</label><input id="s_dic"></div>
+            <div class="col-12 fld"><label>IČ DPH</label><input id="s_icdph"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="fld"><label>Odberateľ / Kunde</label><textarea id="b_party" placeholder="Názov, adresa…"></textarea></div>
+          <div class="grid">
+            <div class="col-6 fld"><label>IČO</label><input id="b_ico"></div>
+            <div class="col-6 fld"><label>DIČ</label><input id="b_dic"></div>
+            <div class="col-12 fld"><label>IČ DPH</label><input id="b_icdph"></div>
+          </div>
+        </div>
+
+        <div class="col-12 fld" data-key="site_name">
+          <label>Stavba / Baustelle</label>
+          <input id="site_name" placeholder="Názov stavby">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="site_name">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-6 fld" data-key="period_from">
+          <label>Obdobie od / Zeitraum von</label>
+          <input id="period_from" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="last-month">Minulý mesiac</button>
+            <button type="button" class="btn small" data-act="this-month">Tento mesiac</button>
+            <button type="button" class="btn small okk only-need" data-ok="period_from">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-6 fld" data-key="period_to">
+          <label>Obdobie do / Zeitraum bis</label>
+          <input id="period_to" type="date">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="period_to">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-4 fld" data-key="issue">
+          <label>Vystavená / Ausgestellt</label>
+          <input id="issue" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="today" data-target="issue">Dnes</button>
+            <button type="button" class="btn small okk only-need" data-ok="issue">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-4 fld" data-key="delivery">
+          <label>Dodanie / Lieferdatum</label>
+          <input id="delivery" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="same-period">= Koniec obdobia</button>
+            <button type="button" class="btn small okk only-need" data-ok="delivery">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-4 fld" data-key="due">
+          <label>Splatnosť / Fällig am</label>
+          <input id="due" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="due-days"></button>
+            <button type="button" class="btn small okk only-need" data-ok="due">✓ Nechať tak</button>
+          </div>
+        </div>
+
+        <div class="col-4 fld"><label>Mena / Währung</label>
+          <select id="currency"><option value="EUR" selected>EUR</option><option value="CZK">CZK</option><option value="PLN">PLN</option></select>
+        </div>
+        <div class="col-4 fld"><label>DPH % / MwSt %</label><input id="vat_rate" type="number" step="0.01" value="0"></div>
+        <div class="col-4 fld" data-key="vs">
+          <label>VS / Referenz</label>
+          <input id="vs">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="vs">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-12">
+          <div class="h3">Položky / Positionen</div>
+          <div id="items_edit"></div>
+          <button type="button" class="btn small" id="add-row">+ Pridať ďalšiu položku</button>
+        </div>
+
+        <div class="col-12 fld" data-key="outro_bi" style="margin-top:12px">
+          <label>Text po faktúre / Hinweis</label>
+          <textarea id="outro_bi"></textarea>
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="outro_bi">✓ Nechať tak</button></div>
+        </div>
+        <div class="col-12 fld" data-key="addendum_bi">
+          <label>Dodatok / Zusatz</label>
+          <input id="addendum_bi">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="addendum_bi">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-12"><hr class="hr"><div class="h3" style="margin-top:4px">Platba / Zahlung</div></div>
+        <div class="col-6 fld"><label>Prijímateľ / Empfänger</label><input id="pay_name"></div>
+        <div class="col-6 fld"><label>IBAN</label><input id="pay_iban"></div>
+        <div class="col-6 fld"><label>BIC</label><input id="pay_bic"></div>
+        <div class="col-6 fld" id="pay_amount_fld"><label>Suma / Betrag</label><input id="pay_amount" type="number" step="0.01"></div>
+        <div class="col-12 fld"><label class="chk"><input id="pay_use_total" type="checkbox" checked> Použiť celkovú sumu faktúry</label></div>
+        <div class="col-12 fld" data-key="pay_msg">
+          <label>Správa pre prijímateľa / Verwendungszweck</label>
+          <input id="pay_msg">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="pay_msg">✓ Nechať tak</button></div>
+        </div>
+        <div class="col-12 fld"><label class="chk"><input type="checkbox" id="show_qr" checked> Zobraziť QR kód</label></div>
+      </div>
+
+      <div style="margin-top:20px">
+        <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
+        <div class="saved-msg" id="saved_msg"></div>
+        <div class="warn-box" id="backup_warn" style="display:none">
+          Odporúčam stiahnuť si zálohu faktúr (raz za mesiac), aby sa nestratili, ak by sa niečo stalo s mobilom/počítačom.
+          <div style="margin-top:8px"><button type="button" class="btn small" data-act="backup">⬇️ Stiahnuť zálohu teraz</button></div>
+        </div>
+        <div class="acts end-acts" style="margin-top:10px">
+          <button type="button" class="btn" id="btn-save-only">💾 Len uložiť</button>
+          <button type="button" class="btn" id="btn-print">🖨️ Vytlačiť</button>
+        </div>
+      </div>
+
+      <!-- ===== Staré faktúry ===== -->
+      <details class="box" id="arch_box">
+        <summary>Staršie faktúry <span id="arch_count" class="muted"></span></summary>
+        <div class="inner">
+          <p class="sub-note">„Použiť ako vzor“ = nová faktúra sa vyplní podľa tejto.</p>
+          <div id="arch_list"></div>
+          <div class="muted" id="arch_totals" style="margin-top:10px; font-size:15px"></div>
+
+          <details class="box" id="trash_box" style="display:none">
+            <summary>🗑️ Kôš – zmazané faktúry <span id="trash_count" class="muted"></span></summary>
+            <div class="inner"><p class="sub-note">Zmazanú faktúru tu môžeš vrátiť späť.</p><div id="trash_list"></div></div>
+          </details>
+        </div>
+      </details>
+
+      <!-- ===== Nastavenia ===== -->
+      <details class="box" id="settings_box">
+        <summary>⚙️ Nastavenia</summary>
+        <div class="inner">
+          <div class="h3" style="margin-top:4px">Ktoré polia sa menia pri každej faktúre?</div>
+          <p class="sub-note">Zaškrtnuté polia budú hore a budú červené, kým sa nezmenia.</p>
+          <div class="watch-list" id="watch_list"></div>
+
+          <div class="h3">Pečiatka</div>
+          <p class="sub-note">Pečiatka sa zapamätá, netreba ju nahrávať zakaždým.</p>
+          <div class="acts">
+            <label class="btn" style="cursor:pointer">Nahrať pečiatku<input type="file" id="stamp_file" accept="image/*" style="display:none"></label>
+            <button type="button" class="btn danger" id="btn-stamp-del">Odstrániť pečiatku</button>
+          </div>
+
+          <div class="h3">Záloha dát</div>
+          <p class="sub-note" id="backup_info"></p>
+          <div class="acts">
+            <button type="button" class="btn" id="btn-export-json">Stiahnuť zálohu</button>
+            <label class="btn" style="cursor:pointer">Načítať zálohu<input type="file" id="import-json" accept="application/json" style="display:none"></label>
+          </div>
+          <p class="sub-note" style="margin-top:8px">Načítanie zálohy faktúry len <b>pridá</b> – nič existujúce sa neprepíše ani nezmaže. Funguje aj so súborom z „Exportovať dáta“ v pôvodnej aplikácii.</p>
+
+          <div class="h3">Vrátiť zoznam faktúr do staršieho stavu</div>
+          <p class="sub-note">Pred každou zmenou sa automaticky odloží posledných 5 verzií zoznamu.</p>
+          <div id="snap_list"></div>
+          <p class="sub-note" style="margin-top:12px">Pôvodná (podrobná) verzia aplikácie: <a href="index.html">index.html</a></p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ================= A4 NÁHĽAD ================= -->
+  <div id="preview">
+    <div class="head"><span>Náhľad faktúry</span><span style="display:flex;gap:6px"><button type="button" class="btn small" id="btn-zoom-prev">🔍 Zväčšiť</button><button type="button" class="btn small" id="btn-close-prev">✕ Zavrieť</button></span></div>
+    <div id="prev_box">
+      <div id="invoice">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+          <div style="font-size:22px;font-weight:800">Faktúra / Rechnung</div>
+          <div style="text-align:right; min-width:220px; font-size:12px">
+            <div style="display:flex; flex-direction:column; gap:4px">
+              <div><div class="muted">Číslo / Nummer</div><div id="o_no"></div></div>
+              <div><div class="muted">VS / Referenz</div><div id="o_vs"></div></div>
+              <div><div class="muted">Vystavená / Ausgestellt am</div><div id="o_issue"></div></div>
+              <div><div class="muted">Dodanie / Lieferdatum</div><div id="o_delivery"></div></div>
+              <div><div class="muted">Splatnosť / Fällig am</div><div id="o_due"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px; font-size:12px">
+          <div><div class="muted" style="font-weight:600;margin-bottom:4px">Dodávateľ / Lieferant</div><div id="o_s_party" style="white-space:pre-wrap"></div><div class="muted" id="o_s_ids" style="margin-top:4px"></div><div class="muted" id="o_s_note" style="margin-top:2px"></div></div>
+          <div>
+            <div class="muted" style="font-weight:600;margin-bottom:4px">Odberateľ / Kunde</div>
+            <div id="o_b_party" style="white-space:pre-wrap"></div>
+            <div class="muted" id="o_b_ids" style="margin-top:4px"></div>
+          </div>
+        </div>
+
+        <div id="o_site" class="muted" style="margin-top:8px; font-size:12px"></div>
+        <div id="o_period" class="muted" style="margin-top:4px; font-size:12px"></div>
+
+        <div style="margin-top:12px">
+          <div class="sep"></div>
+          <table id="view_items" style="font-size:12px">
+            <colgroup>
+              <col style="width:4%"><col style="width:28%"><col style="width:38%"><col style="width:10%"><col style="width:10%"><col style="width:10%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="width:30px">#</th>
+                <th>Názov / Bezeichnung</th>
+                <th>Popis / Beschreibung</th>
+                <th class="right" style="width:80px">Množstvo / Menge</th>
+                <th class="right" style="width:100px">Jedn. cena / Einzelpreis</th>
+                <th class="right" style="width:120px">Medzisúčet / Zwischensumme</th>
+              </tr>
+            </thead>
+            <tbody id="view_body" style="font-size:12px"></tbody>
+          </table>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 280px; gap:16px; margin-top:14px; align-items:flex-start">
+          <div>
+            <div id="o_outro_bi" class="muted" style="white-space:pre-wrap; font-size:12px"></div>
+            <div id="o_addendum_bi" class="muted" style="white-space:pre-wrap; margin-top:6px; font-size:12px"></div>
+          </div>
+          <div>
+            <table style="width:100%; font-size:13px">
+              <tbody>
+                <tr><td>Medzisúčet / Zwischensumme</td><td class="right"><span id="o_sub"></span> <span id="o_ccy"></span></td></tr>
+                <tr><td>DPH / MwSt (<span id="o_vr"></span> %)</td><td class="right"><span id="o_vat"></span> <span id="o_ccy2"></span></td></tr>
+                <tr><td style="font-weight:700">Spolu k úhrade / Gesamt</td><td class="right" style="font-weight:700"><span id="o_total"></span> <span id="o_ccy3"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:18px; align-items:end">
+          <div id="qr_col">
+            <div class="muted" style="font-weight:600; margin-bottom:2px; font-size:12px">Platba / Zahlung</div>
+            <div id="o_pay" style="white-space:pre-wrap; font-size:12px"></div>
+            <div id="qr_block">
+              <div class="muted" style="margin-bottom:6px; font-size:10px">QR platba (SPD 1.0)</div>
+              <img id="o_qr" alt="QR" style="width:36mm; height:36mm; object-fit:contain; border:1px solid var(--line); padding:4px; background:#fff">
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="muted" style="margin-bottom:6px; font-size:12px">Pečiatka / Stempel</div>
+            <img id="o_stamp" alt="" style="max-width:48mm; max-height:30mm; object-fit:contain; border:1px solid var(--line); padding:4px; background:#fff; display:none">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Spodná lišta (len na mobile) -->
+<div class="mbar">
+  <div class="mbar-st need" id="mbar_st"></div>
+  <div class="row">
+    <button type="button" class="btn" id="btn-open-prev">👁 Náhľad</button>
+    <button type="button" class="btn primary" id="btn-mbar-save">💾 Uložiť a PDF</button>
+  </div>
+</div>
+
+<!-- Export libs (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+
+<script>
+(function(){
+  'use strict';
+  const qs=(s,d=document)=>d.querySelector(s);
+  const qsa=(s,d=document)=>Array.from(d.querySelectorAll(s));
+  const money=(n)=> (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  const esc=(s)=> String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmtDate=(d)=>{ if(!d) return ''; const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d); return m ? (+m[3])+'. '+(+m[2])+'. '+m[1] : d; };
+  const iso=(d)=> d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const parseIso=(s)=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m? new Date(+m[1], +m[2]-1, +m[3]) : null; };
+  const norm=(v)=> String(v??'').trim();
+
+  // ---------- storage ----------
+  const STORAGE_KEY='invoices_v1';           // rovnaké ako pôvodná aplikácia
+  const DRAFT_KEY='simple_draft_v1';
+  const WATCH_KEY='simple_watch_v1';
+  const STAMP_KEY='simple_stamp_v1';
+  const TRASH_KEY='simple_trash_v1';          // zmazané faktúry (dajú sa obnoviť)
+  const SNAP_KEY='simple_snapshots_v1';       // posledných 5 verzií zoznamu faktúr
+  const LASTBK_KEY='simple_last_backup';      // kedy bola naposledy stiahnutá záloha
+  const LEGACY_KEY='simple_legacy_imported_v1'; // ktoré faktúry zo starej Android verzie už boli prevzaté
+  let memStore={}, noStorageWarned=false;
+  const hasLS=(()=>{ try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; }catch(e){ return false; } })();
+  function lsGet(k){ if(!hasLS) return memStore[k]??null; try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  // zapíše hodnotu; vráti false, ak sa to nepodarilo (napr. plná pamäť)
+  function lsSet(k,v){
+    if(!hasLS){ memStore[k]=v; if(!noStorageWarned){ noStorageWarned=true; alert('Prehliadač nedovoľuje ukladať (súkromné okno?). Faktúry sa uložia len dočasne – stiahni si zálohu.'); } return true; }
+    try{ localStorage.setItem(k,v); return true; }catch(e){ return false; }
+  }
+  function lsDel(k){ if(!hasLS){ delete memStore[k]; return; } try{ localStorage.removeItem(k); }catch(e){} }
+  function readJSON(k,def){ try{ const v=JSON.parse(lsGet(k)||'null'); return v??def; }catch(e){ return def; } }
+  function loadAll(){ const a=readJSON(STORAGE_KEY,[]); return Array.isArray(a)?a:[]; }
+
+  // pred každou zmenou si odloží doterajší zoznam (posledných 5 verzií)
+  function snapshot(){
+    const cur=lsGet(STORAGE_KEY); if(!cur || cur==='[]') return;
+    const snaps=readJSON(SNAP_KEY,[]); if(snaps[0] && snaps[0].data===cur) return;
+    snaps.unshift({ts:Date.now(), data:cur});
+    let keep=5; while(keep>0 && !lsSet(SNAP_KEY, JSON.stringify(snaps.slice(0,keep)))) keep--;
+    if(keep===0) lsDel(SNAP_KEY);
+  }
+  function saveAll(list){
+    snapshot();
+    const s=JSON.stringify(list);
+    if(!lsSet(STORAGE_KEY, s)){
+      lsDel(SNAP_KEY);                                   // uvoľni miesto a skús znova
+      if(!lsSet(STORAGE_KEY, s)){ alert('⚠️ Faktúru sa NEPODARILO uložiť – pamäť prehliadača je plná.\nStiahni si zálohu (Nastavenia → Stiahnuť zálohu).'); return false; }
+    }
+    if(hasLS && lsGet(STORAGE_KEY)!==s){ alert('⚠️ Uloženie sa nepodarilo overiť. Stiahni si zálohu.'); return false; }
+    return true;
+  }
+
+  // ---------- prevzatie faktúr zo staršej Android verzie (originály ostávajú nedotknuté) ----------
+  function fromLegacy(key, d){
+    const items=(Array.isArray(d.items)?d.items:[]).map(it=>({name:it.name||'', desc:it.desc||'', qty:Number(it.qty)||0, price:Number(it.price)||0}));
+    const vr = d.vat_mode==='nonvat' ? 0 : (Number(d.vat_rate)||0);
+    const sub=items.reduce((s,it)=>s+it.qty*it.price,0), vat=sub*vr/100, total=sub+vat;
+    const party=(p)=>[p?.name,p?.addr].filter(Boolean).join('\n');
+    return { id: Date.parse(d.issue||'')||Date.now(), prefix:d.prefix||'faktura', number:d.number||'',
+      issue:d.issue||'', delivery:d.delivery||'', due:d.due||'', currency:d.currency||'EUR', vat_rate:vr, vs:d.vs||'',
+      site:'', period_from:'', period_to:'',
+      supplier:{party:party(d.seller), ico:d.seller?.ico||'', dic:d.seller?.dic||'', icdph:d.seller?.icdph||''},
+      buyer:{party:party(d.buyer), ico:d.buyer?.ico||'', dic:d.buyer?.dic||'', icdph:d.buyer?.icdph||''},
+      outro:d.outro||'', addendum:d.note||'',
+      pay:{name:d.seller?.name||'', iban:d.iban||'', bic:d.bic||'', amount:total, use_total:true, msg:''},
+      items, sums:{sub,vat,total}, legacy_key:key };
+  }
+  function importLegacy(){
+    if(!hasLS) return 0;
+    const done=new Set(readJSON(LEGACY_KEY,[])); const found=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(!/^inv:[^:]+:/.test(k) || k.startsWith('inv:android5:') || done.has(k)) continue;
+      try{ const d=JSON.parse(localStorage.getItem(k)); if(d && typeof d==='object' && Array.isArray(d.items)) found.push(fromLegacy(k,d)); }catch(e){}
+    }
+    if(!found.length) return 0;
+    const list=loadAll(); const ids=new Set(list.map(r=>r.id));
+    found.forEach(r=>{ while(ids.has(r.id)) r.id++; ids.add(r.id); list.push(r); done.add(r.legacy_key); });
+    if(saveAll(list)) lsSet(LEGACY_KEY, JSON.stringify([...done]));
+    return found.length;
+  }
+
+  // ---------- polia ----------
+  const FIELD_IDS=['prefix','number','vs','s_party','s_ico','s_dic','s_icdph','b_party','b_ico','b_dic','b_icdph',
+    'site_name','period_from','period_to','issue','delivery','due','currency','vat_rate','outro_bi','addendum_bi',
+    'pay_name','pay_iban','pay_bic','pay_amount','pay_msg'];
+  const CHECK_IDS=['pay_use_total','show_qr'];
+
+  const WATCHABLE=[
+    {key:'number', label:'Číslo faktúry'},
+    {key:'period_from', label:'Obdobie od'},
+    {key:'period_to', label:'Obdobie do'},
+    {key:'issue', label:'Dátum vystavenia'},
+    {key:'delivery', label:'Dátum dodania'},
+    {key:'due', label:'Dátum splatnosti'},
+    {key:'vs', label:'Variabilný symbol'},
+    {key:'site_name', label:'Stavba'},
+    {key:'pay_msg', label:'Správa pre prijímateľa'},
+    {key:'outro_bi', label:'Text pod faktúrou'},
+    {key:'addendum_bi', label:'Dodatok'},
+    {key:'item_qty', label:'Položky – množstvo (hodiny)'},
+    {key:'item_price', label:'Položky – cena'},
+    {key:'item_name', label:'Položky – názov'},
+    {key:'item_desc', label:'Položky – popis'},
+  ];
+  const DEFAULT_WATCH=['number','period_from','period_to','issue','delivery','due','item_qty'];
+  const DATE_KEYS=new Set(['period_from','period_to','issue','delivery','due']);
+  let watch=new Set(DEFAULT_WATCH);
+  try{ const w=JSON.parse(lsGet(WATCH_KEY)||'null'); if(Array.isArray(w)) watch=new Set(w); }catch(e){}
+
+  // ---------- stav ----------
+  // base = údaje z predošlej faktúry (vzor), s ktorými sa porovnáva
+  const state={ items:[], base:{}, baseItems:[], confirmed:new Set(), dirty:false };
+
+  function getFlat(){
+    const o={}; FIELD_IDS.forEach(id=>o[id]=qs('#'+id).value); CHECK_IDS.forEach(id=>o[id]=qs('#'+id).checked); return o;
+  }
+  function setFlat(o){
+    FIELD_IDS.forEach(id=>{ if(id==='prefix') return; qs('#'+id).value = o[id]??(id==='currency'?'EUR':id==='vat_rate'?'0':''); });
+    qs('#pay_use_total').checked = o.pay_use_total!==false;
+    qs('#show_qr').checked = o.show_qr!==false;
+  }
+  function rowToFlat(r){
+    return { prefix:r.prefix||'faktura', number:r.number||'', vs:r.vs||'',
+      s_party:r.supplier?.party||'', s_ico:r.supplier?.ico||'', s_dic:r.supplier?.dic||'', s_icdph:r.supplier?.icdph||'',
+      b_party:r.buyer?.party||'', b_ico:r.buyer?.ico||'', b_dic:r.buyer?.dic||'', b_icdph:r.buyer?.icdph||'',
+      site_name:r.site||'', period_from:r.period_from||'', period_to:r.period_to||'',
+      issue:r.issue||'', delivery:r.delivery||'', due:r.due||'',
+      currency:r.currency||'EUR', vat_rate:String(r.vat_rate??0), outro_bi:r.outro||'', addendum_bi:r.addendum||'',
+      pay_name:r.pay?.name||'', pay_iban:r.pay?.iban||'', pay_bic:r.pay?.bic||'',
+      pay_amount: r.pay && r.pay.use_total===false ? String(r.pay.amount||0) : '',
+      pay_msg:r.pay?.msg||'', pay_use_total: !(r.pay && r.pay.use_total===false), show_qr: r.show_qr!==false };
+  }
+  function totals(){
+    const sub=state.items.reduce((s,it)=> s+(Number(it.qty)||0)*(Number(it.price)||0),0);
+    const vr=Number(qs('#vat_rate').value)||0; const vat=sub*(vr/100); return {sub,vr,vat,total:sub+vat};
+  }
+  function collectInvoice(){
+    const f=getFlat(); const t=totals();
+    return {
+      id: Date.now(), prefix:f.prefix, number:f.number, issue:f.issue, delivery:f.delivery, due:f.due,
+      currency:f.currency, vat_rate:t.vr, vs:f.vs, site:f.site_name, period_from:f.period_from, period_to:f.period_to,
+      supplier:{party:f.s_party, ico:f.s_ico, dic:f.s_dic, icdph:f.s_icdph},
+      buyer:{party:f.b_party, ico:f.b_ico, dic:f.b_dic, icdph:f.b_icdph},
+      outro:f.outro_bi, addendum:f.addendum_bi, show_qr:f.show_qr,
+      pay:{name:f.pay_name, iban:f.pay_iban, bic:f.pay_bic, amount:(f.pay_use_total?t.total:Number(f.pay_amount||0)), use_total:f.pay_use_total, msg:f.pay_msg},
+      items: state.items.map(x=>({...x})), sums:{sub:t.sub, vat:t.vat, total:t.total}
+    };
+  }
+
+  // ---------- rozloženie podľa nastavení ----------
+  function applyLayout(){
+    qs('#watch_list').innerHTML = WATCHABLE.map(w=>`<label><input type="checkbox" data-watch="${w.key}" ${watch.has(w.key)?'checked':''}> ${esc(w.label)}</label>`).join('');
+  }
+
+  // ---------- položky ----------
+  function renderEditItems(){
+    if(!state.items.length) state.items.push({name:'',desc:'',qty:1,price:0});
+    qs('#items_edit').innerHTML = state.items.map((it,i)=>`
+      <div class="item" data-i="${i}">
+        <div class="item-head"><b>Položka ${i+1}</b><span class="sp"></span>
+          <button type="button" class="btn small okk only-need" data-act="item-ok">✓ Nechať tak</button>
+          ${state.items.length>1?'<button type="button" class="btn small danger" data-act="item-del">Odstrániť</button>':''}
+        </div>
+        <div class="fld" data-ik="name"><label>Názov</label><input data-k="name" value="${esc(it.name)}"><div class="hint"></div></div>
+        <div class="fld" data-ik="desc"><label>Popis</label><textarea data-k="desc">${esc(it.desc)}</textarea><div class="hint"></div></div>
+        <div class="g2">
+          <div class="fld" data-ik="qty"><label>Množstvo (hodiny / kusy)</label><input data-k="qty" type="number" step="0.01" inputmode="decimal" value="${esc(it.qty)}"><div class="hint"></div></div>
+          <div class="fld" data-ik="price"><label>Cena za 1 (${esc(qs('#currency').value)})</label><input data-k="price" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"><div class="hint"></div></div>
+        </div>
+        <div class="item-sum">Spolu za položku: <b id="isub_${i}">${money((Number(it.qty)||0)*(Number(it.price)||0))}</b></div>
+      </div>`).join('');
+  }
+
+  // ---------- červené / zelené ----------
+  function isChanged(key, cur, base){
+    if(state.confirmed.has(key)) return norm(cur)!=='';
+    if(norm(cur)==='') return false;
+    return norm(cur)!==norm(base);
+  }
+  function hintText(key, base){
+    if(norm(base)==='') return '';
+    return 'Minule: <b>'+esc(DATE_KEYS.has(key)? fmtDate(base) : base)+'</b>';
+  }
+  function updateStatus(){
+    const missing=[];
+    // jednoduché polia
+    WATCHABLE.filter(w=>!w.key.startsWith('item_')).forEach(w=>{
+      const el=document.querySelector('.fld[data-key="'+w.key+'"]'); if(!el) return;
+      const cur=qs('#'+w.key).value, base=state.base[w.key];
+      el.classList.remove('need','done');
+      const hint=el.querySelector('.hint');
+      if(watch.has(w.key)){
+        const ok=isChanged(w.key,cur,base);
+        el.classList.add(ok?'done':'need');
+        if(!ok) missing.push(w.label);
+        hint.innerHTML=hintText(w.key, base);
+        const okBtn=el.querySelector('[data-ok]'); if(okBtn) okBtn.hidden = norm(cur)==='';
+      } else { hint.innerHTML=''; }
+    });
+    // položky
+    qsa('#items_edit .item').forEach(row=>{
+      const i=+row.dataset.i; const it=state.items[i]; const b=state.baseItems[i]||{};
+      let rowNeed=false;
+      ['name','desc','qty','price'].forEach(k=>{
+        const el=row.querySelector('.fld[data-ik="'+k+'"]'); el.classList.remove('need','done');
+        const hint=el.querySelector('.hint');
+        if(watch.has('item_'+k)){
+          const ok=isChanged('item_'+k+'_'+i, it[k], b[k]);
+          el.classList.add(ok?'done':'need'); if(!ok){ rowNeed=true; missing.push('Položka '+(i+1)+' – '+({name:'názov',desc:'popis',qty:'množstvo',price:'cena'})[k]); }
+          hint.innerHTML = norm(b[k])!=='' ? 'Minule: <b>'+esc(b[k])+'</b>' : '';
+        } else hint.innerHTML='';
+      });
+      row.classList.toggle('has-need', rowNeed);
+    });
+
+    const dh=document.querySelector('.fld[data-key="delivery"] .hint');
+    dh.innerHTML = (dh.innerHTML? dh.innerHTML+'<br>' : '') + 'Nastaví sa samo podľa „Obdobie do“.';
+    // tlačidlo „ďalšie číslo“
+    const nb=qs('[data-act="next-number"]'); const nn=nextNumber(state.base.number);
+    if(nn && norm(qs('#number').value)!==nn){ nb.hidden=false; nb.textContent='Použiť ďalšie číslo: '+nn; } else nb.hidden=true;
+    // tlačidlo splatnosti
+    const db=qs('[data-act="due-days"]'); db.textContent='Splatnosť '+dueDays()+' dní od vystavenia';
+    // suma platby
+    qs('#pay_amount_fld').style.display = qs('#pay_use_total').checked ? 'none' : '';
+
+    const st=qs('#status');
+    if(missing.length){
+      st.className='status need';
+      st.innerHTML='Zostáva zmeniť: '+missing.length+(missing.length===1?' pole':missing.length<5?' polia':' polí')+'<small>'+esc(missing.join(', '))+'</small>';
+    }else{
+      st.className='status done';
+      st.innerHTML='✓ Všetko je hotové<small>Skontroluj náhľad a stlač „Uložiť a stiahnuť PDF“.</small>';
+    }
+    const mb=qs('#mbar_st');
+    mb.className='mbar-st '+(missing.length?'need':'done');
+    mb.textContent= missing.length ? '✏️ Zostáva zmeniť: '+missing.length : '✓ Všetko hotové';
+    return missing;
+  }
+
+  // ---------- pomocné výpočty ----------
+  function nextNumber(n){
+    n=norm(n); const m=/(\d+)(?!.*\d)/.exec(n); if(!m) return '';
+    const num=String(Number(m[1])+1).padStart(m[1].length,'0');
+    return n.slice(0,m.index)+num+n.slice(m.index+m[1].length);
+  }
+  function dueDays(){
+    const a=parseIso(state.base.issue), b=parseIso(state.base.due);
+    if(a&&b){ const d=Math.round((b-a)/86400000); if(d>=0 && d<=120) return d; }
+    return 14;
+  }
+  function setVal(id,v){ const el=qs('#'+id); el.value=v; }
+  // dátum dodania = vždy posledný deň obdobia
+  function syncDelivery(){ const pt=qs('#period_to').value; if(pt) setVal('delivery', pt); }
+  // keď sa zmení číslo, prepíš ho aj vo VS a správe pre prijímateľa (ak tam bolo staré číslo)
+  function syncNumber(){
+    const oldN=norm(state.base.number), newN=norm(qs('#number').value);
+    if(!oldN || !newN) return;
+    ['vs','pay_msg'].forEach(id=>{
+      const b=state.base[id]||'';
+      if(b && b.includes(oldN)) setVal(id, b.split(oldN).join(newN));
+      else { // napr. VS = číslo bez pomlčiek (2025-010 → 2025010)
+        const oD=oldN.replace(/\D/g,''), nD=newN.replace(/\D/g,'');
+        if(b && oD && b.includes(oD)) setVal(id, b.split(oD).join(nD));
+      }
+    });
+  }
+
+  // ---------- náhľad ----------
+  function buildSPD(amount){
+    const ascii=(t)=> (t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 \-._+:,\/]/g,'');
+    const acc=(qs('#pay_iban').value||'').replace(/\s+/g,'').toUpperCase();
+    const bic=(qs('#pay_bic').value||'').trim().toUpperCase();
+    const parts=['SPD*1.0','ACC:'+(bic?acc+'+'+bic:acc)];
+    const am=Number(amount||0); if(am>0) parts.push('AM:'+am.toFixed(2));
+    parts.push('CC:'+(qs('#currency').value||'EUR').slice(0,3).toUpperCase());
+    const vs=(qs('#vs').value||'').trim(); if(vs) parts.push('X-VS:'+vs);
+    const rn=ascii(qs('#pay_name').value).slice(0,35); if(rn) parts.push('RN:'+rn);
+    const msg=ascii('Faktura '+(qs('#number').value||'')).slice(0,60); if(msg) parts.push('MSG:'+msg);
+    return parts.join('*');
+  }
+  let lastQR='';
+  function drawQR(payload){
+    if(payload===lastQR) return; lastQR=payload;
+    const img=qs('#o_qr'); img.setAttribute('crossorigin','anonymous');
+    img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&ecc=M&data='+encodeURIComponent(payload);
+  }
+  function renderView(){
+    const f=getFlat();
+    qs('#o_no').textContent=(f.prefix||'faktura')+'-'+(f.number||'');
+    qs('#o_vs').textContent=f.vs||'';
+    qs('#o_s_party').textContent=f.s_party||''; qs('#o_b_party').textContent=f.b_party||'';
+    qs('#o_issue').textContent=fmtDate(f.issue); qs('#o_delivery').textContent=fmtDate(f.delivery); qs('#o_due').textContent=fmtDate(f.due);
+    const sids=[f.s_ico,f.s_dic,f.s_icdph].filter(Boolean);
+    qs('#o_s_ids').textContent=sids.length?('IČO/DIČ/IČ DPH: '+sids.join(' / ')):'';
+    qs('#o_s_note').textContent='Nie som platca DPH/Ich bin nicht MwSt. zahler';
+    const bids=[f.b_ico,f.b_dic,f.b_icdph].filter(Boolean);
+    qs('#o_b_ids').textContent=bids.length?('IČO/DIČ/IČ DPH: '+bids.join(' / ')):'';
+    const site=(f.site_name||'').trim();
+    qs('#o_site').textContent=site?('Stavba / Baustelle: '+site):'';
+    qs('#o_period').textContent=(f.period_from||f.period_to)?('Obdobie / Zeitraum: '+fmtDate(f.period_from)+' – '+fmtDate(f.period_to)):'';
+
+    qs('#view_body').innerHTML=state.items.map((it,i)=>`
+      <tr><td>${i+1}</td><td>${esc(it.name)}</td><td>${esc(it.desc)}</td>
+      <td class="right">${esc(it.qty||0)}</td><td class="right">${money(it.price||0)}</td>
+      <td class="right">${money((Number(it.qty)||0)*(Number(it.price)||0))}</td></tr>`).join('');
+
+    const t=totals(), cc=f.currency;
+    qs('#o_sub').textContent=money(t.sub); qs('#o_vr').textContent=t.vr.toFixed(2).replace(/\.00$/,'');
+    qs('#o_vat').textContent=money(t.vat); qs('#o_total').textContent=money(t.total);
+    qs('#o_ccy').textContent=cc; qs('#o_ccy2').textContent=cc; qs('#o_ccy3').textContent=cc;
+    qs('#o_outro_bi').textContent=f.outro_bi||''; qs('#o_addendum_bi').textContent=f.addendum_bi||'';
+
+    const iban=(f.pay_iban||'').replace(/\s+/g,'');
+    const amount=f.pay_use_total? t.total : Number(f.pay_amount||0);
+    const msg=(f.pay_msg||'').trim() || (f.vs?('VS '+f.vs):'');
+    const lines=[];
+    if(f.pay_name.trim()) lines.push('Prijímateľ / Empfänger: '+f.pay_name.trim());
+    if(iban) lines.push('IBAN: '+iban);
+    if(f.pay_bic.trim()) lines.push('BIC: '+f.pay_bic.trim());
+    if(amount) lines.push('Suma / Betrag: '+amount.toFixed(2)+' '+cc);
+    if(msg) lines.push('Správa / Verwendungszweck: '+msg);
+    qs('#o_pay').textContent=lines.join('\n');
+    qs('#qr_block').style.display = (f.show_qr && iban) ? '' : 'none';
+    if(f.show_qr && iban){ try{ drawQR(buildSPD(amount)); }catch(e){} }
+  }
+
+  // prispôsobenie A4 náhľadu šírke obrazovky
+  function fitPreview(){
+    const inv=qs('#invoice'); inv.style.zoom='';
+    if(document.body.classList.contains('exporting') || prevZoomed) return;
+    const w=qs('#prev_box').clientWidth, full=inv.offsetWidth;
+    if(full>0 && w>0 && w<full) inv.style.zoom=(w/full).toFixed(4);
+  }
+
+  // ---------- koncept (rozpracovaná faktúra) ----------
+  function saveDraft(){
+    lsSet(DRAFT_KEY, JSON.stringify({ flat:getFlat(), items:state.items, base:state.base, baseItems:state.baseItems, confirmed:[...state.confirmed] }));
+  }
+  function loadTemplate(row){
+    state.confirmed=new Set();
+    if(row){
+      const f=rowToFlat(row);
+      state.base=f; state.baseItems=(row.items||[]).map(x=>({...x}));
+      setFlat(f); state.items=state.baseItems.map(x=>({...x}));
+    }else{
+      state.base={}; state.baseItems=[];
+      const t=new Date(); setFlat({issue:iso(t), delivery:iso(t), due:iso(new Date(t.getTime()+14*86400000))});
+      state.items=[];
+    }
+    qs('#saved_msg').style.display='none';
+    renderEditItems(); refresh(false);
+  }
+  const when=(r)=> Date.parse(r.issue||'') || r.id || 0;
+  // najnovšia faktúra = podľa dátumu vystavenia, pri zhode podľa času uloženia
+  function latestRow(){
+    const l=loadAll(); return l.length? l.reduce((a,b)=> (when(b)>when(a) || (when(b)===when(a) && b.id>a.id)) ? b : a) : null;
+  }
+
+  function refresh(persist=true){
+    updateStatus(); renderView();
+    if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; }
+  }
+
+  // ---------- udalosti ----------
+  document.addEventListener('input', (e)=>{
+    const t=e.target;
+    if(t.closest('#items_edit')){
+      const row=t.closest('.item'); const i=+row.dataset.i; const k=t.dataset.k;
+      state.items[i][k] = (k==='qty'||k==='price') ? (t.value===''?'':Number(t.value)) : t.value;
+      const s=qs('#isub_'+i); if(s) s.textContent=money((Number(state.items[i].qty)||0)*(Number(state.items[i].price)||0));
+    }else if(t.id==='number'){ syncNumber(); }
+    else if(t.id==='period_to'){ syncDelivery(); }
+    else if(t.matches('[data-watch]')){ return; }
+    if(t.closest('#editor')) refresh();
+  });
+  document.addEventListener('change', (e)=>{
+    const t=e.target;
+    if(t.matches('[data-watch]')){
+      t.checked? watch.add(t.dataset.watch) : watch.delete(t.dataset.watch);
+      lsSet(WATCH_KEY, JSON.stringify([...watch])); applyLayout(); refresh(false); return;
+    }
+    if(t.id==='currency'){ renderEditItems(); }
+    if(t.id==='period_to') syncDelivery();
+    if(t.type==='checkbox' || t.tagName==='SELECT' || t.type==='date') refresh();
+  });
+
+  document.addEventListener('click', (e)=>{
+    const b=e.target.closest('button'); if(!b) return;
+    const ok=b.dataset.ok;
+    if(ok){ state.confirmed.add(ok); refresh(); return; }
+    const act=b.dataset.act; if(!act) return;
+    const today=new Date();
+    if(act==='today'){ setVal(b.dataset.target, iso(today)); }
+    else if(act==='same-period'){ syncDelivery(); }
+    else if(act==='last-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth()-1, 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth(), 0))); syncDelivery(); }
+    else if(act==='this-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth(), 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth()+1, 0))); syncDelivery(); }
+    else if(act==='due-days'){ const a=parseIso(qs('#issue').value)||today; setVal('due', iso(new Date(a.getFullYear(), a.getMonth(), a.getDate()+dueDays()))); }
+    else if(act==='next-number'){ setVal('number', nextNumber(state.base.number)); syncNumber(); }
+    else if(act==='item-ok'){ const i=+b.closest('.item').dataset.i; ['name','desc','qty','price'].forEach(k=>state.confirmed.add('item_'+k+'_'+i)); }
+    else if(act==='item-del'){ const i=+b.closest('.item').dataset.i; if(!confirm('Naozaj odstrániť položku '+(i+1)+'?')) return; state.items.splice(i,1); state.baseItems.splice(i,1); state.confirmed=new Set([...state.confirmed].filter(k=>!k.startsWith('item_'))); renderEditItems(); }
+    else if(act==='use'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Vyplniť novú faktúru podľa faktúry '+(r.number||'')+'?')){ loadTemplate(r); saveDraft(); window.scrollTo({top:0,behavior:'smooth'}); } return; }
+    else if(act==='del'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Zmazať faktúru '+(r.number||'')+'?\n(Presunie sa do koša, dá sa obnoviť.)')){ toTrash(r); saveAll(loadAll().filter(x=>x.id!==id)); renderArchive(); } return; }
+    else if(act==='restore'){ const id=+b.closest('[data-tid]').dataset.tid; const tr=readJSON(TRASH_KEY,[]); const r=tr.find(x=>x.id===id); if(!r) return; const list=loadAll(); const {deleted_at,...row}=r; while(list.some(x=>x.id===row.id)) row.id++; list.push(row); if(saveAll(list)){ lsSet(TRASH_KEY, JSON.stringify(tr.filter(x=>x!==r))); renderArchive(); } return; }
+    else if(act==='purge'){ const id=+b.closest('[data-tid]').dataset.tid; if(confirm('Natrvalo vymazať túto faktúru z koša? Toto sa už nedá vrátiť.')){ lsSet(TRASH_KEY, JSON.stringify(readJSON(TRASH_KEY,[]).filter(x=>x.id!==id))); renderArchive(); } return; }
+    else if(act==='snap'){ const i=+b.dataset.i; const s=readJSON(SNAP_KEY,[])[i]; if(!s) return; let arr=[]; try{ arr=JSON.parse(s.data); }catch(e){} if(confirm('Vrátiť zoznam faktúr do stavu z '+new Date(s.ts).toLocaleString('sk-SK')+' ('+arr.length+' faktúr)?\nAktuálny stav sa tiež odloží.')){ saveAll(arr); renderArchive(); } return; }
+    else if(act==='backup'){ downloadBackup(); return; }
+    else return;
+    refresh();
+  });
+
+  qs('#add-row').onclick=()=>{ const last=state.items[state.items.length-1]||{}; state.items.push({name:last.name||'',desc:'',qty:'',price:last.price||0}); renderEditItems(); refresh(); };
+  qs('#btn-new').onclick=()=>{
+    const r=latestRow();
+    if(!r){ alert('Zatiaľ nie je uložená žiadna faktúra.'); return; }
+    if(lsGet(DRAFT_KEY) && !confirm('Načítať poslednú faktúru ('+(r.number||'')+')?\nRozpracované zmeny sa stratia.')) return;
+    lsDel(DRAFT_KEY); loadTemplate(r); window.scrollTo({top:0, behavior:'smooth'});
+  };
+  qs('#btn-print').onclick=()=>{ setTitle(); fitReset(); setTimeout(()=>{ window.print(); fitPreview(); },50); };
+  // uloží faktúru do zoznamu; vráti true, ak sa podarilo
+  function doSave(){
+    const missing=updateStatus();
+    if(missing.length && !confirm('Pozor! Ešte nie je zmenené:\n\n• '+missing.join('\n• ')+'\n\nNaozaj chceš faktúru uložiť takto?')) return false;
+    if(!norm(qs('#number').value)){ alert('Chýba číslo faktúry.'); qs('#number').focus(); return false; }
+    const inv=collectInvoice();
+    let list=loadAll();
+    const same=list.find(r=> (r.prefix||'faktura')===inv.prefix && norm(r.number)===norm(inv.number));
+    if(same){
+      if(!confirm('Faktúra s číslom '+inv.number+' už je uložená.\nPrepísať ju touto novou?\n(Stará sa presunie do koša, dá sa obnoviť.)')) return false;
+      toTrash(same); list=list.filter(r=>r!==same);
+    }
+    list.push(inv);
+    if(!saveAll(list)) return false;
+    lsDel(DRAFT_KEY); renderArchive();
+    const m=qs('#saved_msg'); m.textContent='✓ Faktúra '+inv.number+' je uložená. Uložených faktúr spolu: '+list.length+'.'; m.style.display='block';
+    return true;
+  }
+  qs('#btn-save-pdf').onclick=async ()=>{ if(doSave()){ await exportPDF(); } };
+  qs('#btn-save-only').onclick=()=>{ doSave(); };
+  qs('#btn-mbar-save').onclick=()=>qs('#btn-save-pdf').onclick();
+  let prevZoomed=false;
+  qs('#btn-zoom-prev').onclick=()=>{ prevZoomed=!prevZoomed; qs('#btn-zoom-prev').textContent=prevZoomed?'🔍 Zmenšiť':'🔍 Zväčšiť'; if(prevZoomed) fitReset(); else fitPreview(); };
+  function openPrev(){ document.body.classList.add('show-prev'); fitPreview(); qs('#preview').scrollTop=0; }
+  function closePrev(){ document.body.classList.remove('show-prev'); if(prevZoomed) qs('#btn-zoom-prev').onclick(); }
+  qs('#btn-open-prev').onclick=openPrev;
+  qs('#btn-close-prev').onclick=closePrev;
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePrev(); });
+
+  // pečiatka
+  function applyStamp(){ const s=lsGet(STAMP_KEY); const img=qs('#o_stamp'); if(s){ img.src=s; img.style.display=''; } else { img.removeAttribute('src'); img.style.display='none'; } }
+  qs('#stamp_file').onchange=(e)=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ lsSet(STAMP_KEY, r.result); applyStamp(); }; r.readAsDataURL(f); e.target.value=''; };
+  qs('#btn-stamp-del').onclick=()=>{ if(confirm('Odstrániť pečiatku?')){ lsDel(STAMP_KEY); applyStamp(); } };
+
+  // záloha
+  function toTrash(row){
+    const tr=readJSON(TRASH_KEY,[]); tr.unshift({...row, deleted_at:Date.now()});
+    let keep=50; while(keep>0 && !lsSet(TRASH_KEY, JSON.stringify(tr.slice(0,keep)))) keep=Math.floor(keep/2);
+  }
+  // záloha = rovnaký formát ako „Exportovať dáta“ v pôvodnej aplikácii (dá sa tam aj načítať)
+  function downloadBackup(){
+    const blob=new Blob([JSON.stringify(loadAll(),null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='faktury-zaloha-'+iso(new Date())+'.json';
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1200);
+    lsSet(LASTBK_KEY, String(Date.now())); renderArchive();
+  }
+  qs('#btn-export-json').onclick=downloadBackup;
+  // načítanie zálohy faktúry PRIDÁ – nič existujúce sa neprepíše ani nezmaže
+  qs('#import-json').onchange=(e)=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{
+    let arr; try{ arr=JSON.parse(r.result); if(!Array.isArray(arr)) throw 0; }catch(err){ alert('Neplatný súbor.'); return; }
+    const list=loadAll(); const ids=new Set(list.map(x=>x.id));
+    const sig=(x)=>[(x.prefix||'faktura'), norm(x.number), x.issue||'', Number(x.sums?.total||0).toFixed(2)].join('|');
+    const sigs=new Set(list.map(sig)); let added=0, skipped=0;
+    arr.forEach(x=>{ if(!x || typeof x!=='object') return;
+      if(sigs.has(sig(x))){ skipped++; return; }
+      const row={...x}; if(typeof row.id!=='number') row.id=Date.now(); while(ids.has(row.id)) row.id++;
+      ids.add(row.id); sigs.add(sig(row)); list.push(row); added++; });
+    if(added && !saveAll(list)) return;
+    renderArchive(); alert('Hotovo. Pridaných faktúr: '+added+(skipped?'\nUž tam boli (preskočené): '+skipped:''));
+  }; r.readAsText(f); e.target.value=''; };
+
+  // archív
+  function renderArchive(){
+    const list=loadAll().sort((a,b)=> (when(b)-when(a)) || (b.id-a.id));
+    qs('#arch_list').innerHTML = list.length ? list.map(r=>`
+      <div class="arch-row" data-id="${r.id}">
+        <div class="info"><b>${esc(r.number||'(bez čísla)')}</b> · ${esc(fmtDate(r.issue))}<br>
+          <span class="muted">${esc((r.buyer?.party||'').split('\n')[0])} · ${money(r.sums?.total||0)} ${esc(r.currency||'')}</span></div>
+        <button type="button" class="btn small" data-act="use">Použiť ako vzor</button>
+        <button type="button" class="btn small danger" data-act="del">Zmazať</button>
+      </div>`).join('') : '<p class="muted">Zatiaľ žiadne uložené faktúry.</p>';
+    const per={}; list.forEach(r=>{ const c=r.currency||'EUR'; per[c]=(per[c]||0)+(r.sums?.total||0); });
+    const parts=Object.entries(per).map(([c,v])=>money(v)+' '+c);
+    qs('#arch_totals').textContent = parts.length? 'Spolu všetky faktúry: '+parts.join(' | ') : '';
+    qs('#arch_count').textContent = list.length ? '('+list.length+')' : '';
+    const lr=latestRow();
+    qs('#last_info').innerHTML = lr ? 'Posledná uložená: <b>'+esc(lr.number||'(bez čísla)')+'</b>'+(lr.issue?' · '+esc(fmtDate(lr.issue)):'') : 'Zatiaľ nie je uložená žiadna faktúra.';
+
+    // kôš
+    const tr=readJSON(TRASH_KEY,[]);
+    qs('#trash_box').style.display = tr.length? '' : 'none';
+    qs('#trash_count').textContent = '('+tr.length+')';
+    qs('#trash_list').innerHTML = tr.map(r=>`
+      <div class="arch-row" data-tid="${r.id}">
+        <div class="info"><b>${esc(r.number||'(bez čísla)')}</b> · ${esc(fmtDate(r.issue))}<br>
+          <span class="muted">zmazaná ${esc(new Date(r.deleted_at||0).toLocaleDateString('sk-SK'))} · ${money(r.sums?.total||0)} ${esc(r.currency||'')}</span></div>
+        <button type="button" class="btn small okk" data-act="restore">Obnoviť</button>
+        <button type="button" class="btn small ghost" data-act="purge">Vymazať natrvalo</button>
+      </div>`).join('');
+
+    // staršie verzie zoznamu
+    const snaps=readJSON(SNAP_KEY,[]);
+    qs('#snap_list').innerHTML = snaps.length ? snaps.map((s,i)=>{ let n=0; try{ n=JSON.parse(s.data).length; }catch(e){}
+      return `<div class="arch-row"><div class="info">${esc(new Date(s.ts).toLocaleString('sk-SK'))} · ${n} faktúr</div><button type="button" class="btn small" data-act="snap" data-i="${i}">Vrátiť tento stav</button></div>`; }).join('')
+      : '<p class="muted">Zatiaľ nič.</p>';
+
+    // pripomienka zálohy
+    const last=Number(lsGet(LASTBK_KEY)||0); const days=last? Math.floor((Date.now()-last)/86400000) : null;
+    qs('#backup_info').textContent = 'Posledná záloha: '+(last? new Date(last).toLocaleDateString('sk-SK')+(days?` (pred ${days} dňami)`:' (dnes)') : 'ešte nikdy');
+    const warn = list.length>0 && (days===null || days>=30);
+    qs('#backup_warn').style.display = warn? '' : 'none';
+  }
+
+  // PDF
+  function fileName(){ const p=(qs('#prefix').value||'faktura').trim(), n=(qs('#number').value||'').trim(); return (p&&n)?p+'-'+n:(n||p||'faktura'); }
+  function setTitle(){ document.title=fileName(); }
+  function fitReset(){ qs('#invoice').style.zoom=''; }
+  async function exportPDF(){
+    const ready=()=> window.html2canvas && window.jspdf && window.jspdf.jsPDF;
+    let tries=0; while(!ready() && tries++<80){ await new Promise(r=>setTimeout(r,100)); }
+    setTitle(); fitReset();
+    if(!ready()){ window.print(); fitPreview(); return; }
+    document.body.classList.add('exporting'); fitReset();
+    try{
+      const node=qs('#invoice');
+      const scale=Math.min(3, Math.max(2, devicePixelRatio||2));
+      const canvas=await html2canvas(node,{scale, backgroundColor:'#fff', useCORS:true, allowTaint:true});
+      const pdf=new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+      const pxW=canvas.width, pxH=canvas.height, pagePxH=Math.floor(pxW*(297/210)); let y=0, page=0;
+      while(y<pxH){
+        const h=Math.min(pagePxH, pxH-y);
+        const c=document.createElement('canvas'); c.width=pxW; c.height=h; c.getContext('2d').drawImage(canvas,0,-y);
+        if(page>0) pdf.addPage('a4','portrait');
+        pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,h*210/pxW);
+        y+=h; page++;
+      }
+      pdf.save(fileName()+'.pdf');
+    } finally { document.body.classList.remove('exporting'); fitPreview(); }
+  }
+
+  // ---------- štart ----------
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // požiadaj prehliadač, aby uložené dáta nikdy sám nemazal
+    try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
+    const legacy=importLegacy();
+    applyLayout(); applyStamp(); renderArchive();
+    if(legacy) setTimeout(()=>alert('Našiel som '+legacy+' faktúr zo staršej verzie aplikácie a pridal som ich do zoznamu „Staršie faktúry“.'),300);
+    let d=null; try{ d=JSON.parse(lsGet(DRAFT_KEY)||'null'); }catch(e){}
+    if(d && d.flat){
+      state.base=d.base||{}; state.baseItems=d.baseItems||[]; state.confirmed=new Set(d.confirmed||[]);
+      setFlat(d.flat); state.items=(d.items||[]).map(x=>({...x}));
+      renderEditItems(); refresh(false);
+    }else{
+      loadTemplate(latestRow());
+    }
+    fitPreview(); addEventListener('resize', fitPreview);
+  });
+})();
+</script>
+</body>
+</html>
