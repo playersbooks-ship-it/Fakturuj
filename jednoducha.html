@@ -60,6 +60,14 @@
   .sec-badge.done{color:var(--green); background:var(--green-bg); border-color:var(--green-line);}
   .sec .item{background:var(--surface);}
   .sec #add-row{margin-bottom:14px;}
+  .month-pick{margin-bottom:16px; padding:14px; border-radius:12px; background:var(--brand-bg); border:1px solid var(--line);}
+  .month-pick > label{display:block; font-size:17px; font-weight:700; margin-bottom:8px; color:var(--label);}
+  .mp-row{display:grid; grid-template-columns:1.6fr 1fr; gap:10px; margin-bottom:10px;}
+  .mp-btn{width:100%; padding:14px; font-size:18px; font-weight:700;}
+  .btn.primary.mp-btn.applied{background:var(--green-bg); color:var(--green); border-color:var(--green-line);}
+  .mp-hint{font-size:15px; color:var(--muted); margin-top:8px; line-height:1.5;}
+  .mp-hint b{color:var(--ink);}
+  select:disabled{background:var(--readonly); color:var(--muted); opacity:1;}
   .fld.flash{animation:flash 1.2s ease-out;}
   @keyframes flash{0%{box-shadow:0 0 0 6px var(--red-line); border-radius:12px;} 100%{box-shadow:0 0 0 0 transparent;}}
   .mbar-st.need{cursor:pointer;}
@@ -254,7 +262,7 @@
         </div>
       </section>
       <section class="sec">
-        <div class="sec-h"><span>🏗️ 3. Stavba a obdobie</span><span class="sec-badge"></span></div>
+        <div class="sec-h"><span>🏗️ 3. Stavba</span><span class="sec-badge"></span></div>
         <div class="grid">
         <div class="col-12 fld" data-key="site_name">
           <label>Stavba / Baustelle</label>
@@ -262,68 +270,58 @@
           <div class="hint"></div>
           <div class="acts"><button type="button" class="btn small okk only-need" data-ok="site_name">✓ Nechať tak</button></div>
         </div>
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><span>📅 4. Mesiac a dátumy</span><span class="sec-badge"></span></div>
+        <div class="grid">
+        <div class="col-12 month-pick">
+          <label for="mp_month">Za ktorý mesiac je faktúra?</label>
+          <div class="mp-row">
+            <select id="mp_month" aria-label="Mesiac"><option value="0">Január</option><option value="1">Február</option><option value="2">Marec</option><option value="3">Apríl</option><option value="4">Máj</option><option value="5">Jún</option><option value="6">Júl</option><option value="7">August</option><option value="8">September</option><option value="9">Október</option><option value="10">November</option><option value="11">December</option></select>
+            <select id="mp_year" aria-label="Rok"></select>
+          </div>
+          <button type="button" class="btn primary mp-btn" data-act="apply-month">📅 Nastaviť dátumy</button>
+          <div class="mp-hint" id="mp_hint"></div>
+        </div>
         <div class="col-6 fld" data-key="period_from">
           <label>Obdobie od / Zeitraum von</label>
           <input id="period_from" type="date">
           <div class="hint"></div>
-          <div class="acts">
-            <button type="button" class="btn small" data-act="last-month">Minulý mesiac</button>
-            <button type="button" class="btn small" data-act="this-month">Tento mesiac</button>
-            <button type="button" class="btn small okk only-need" data-ok="period_from">✓ Nechať tak</button>
-          </div>
         </div>
         <div class="col-6 fld" data-key="period_to">
           <label>Obdobie do / Zeitraum bis</label>
           <input id="period_to" type="date">
           <div class="hint"></div>
-          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="period_to">✓ Nechať tak</button></div>
         </div>
-        </div>
-      </section>
-      <section class="sec">
-        <div class="sec-h"><span>📅 4. Dátumy</span><span class="sec-badge"></span></div>
-        <div class="grid">
         <div class="col-4 fld" data-key="issue">
           <label>Vystavená / Ausgestellt</label>
           <input id="issue" type="date">
           <div class="hint"></div>
-          <div class="acts">
-            <button type="button" class="btn small" data-act="today" data-target="issue">Dnes</button>
-            <button type="button" class="btn small okk only-need" data-ok="issue">✓ Nechať tak</button>
-          </div>
         </div>
         <div class="col-4 fld" data-key="delivery">
           <label>Dodanie / Lieferdatum</label>
           <input id="delivery" type="date">
           <div class="hint"></div>
-          <div class="acts">
-            <button type="button" class="btn small" data-act="same-period">= Koniec obdobia</button>
-            <button type="button" class="btn small okk only-need" data-ok="delivery">✓ Nechať tak</button>
-          </div>
         </div>
         <div class="col-4 fld" data-key="due">
           <label>Splatnosť / Fällig am</label>
           <input id="due" type="date">
           <div class="hint"></div>
-          <div class="acts">
-            <button type="button" class="btn small" data-act="due-days"></button>
-            <button type="button" class="btn small okk only-need" data-ok="due">✓ Nechať tak</button>
-          </div>
         </div>
         </div>
       </section>
       <section class="sec">
         <div class="sec-h"><span>💶 5. Mena, DPH a VS</span><span class="sec-badge"></span></div>
         <div class="grid">
-        <div class="col-4 fld"><label>Mena / Währung</label>
+        <div class="col-4 fld"><label>Mena / Währung <span class="lock-ico">🔒</span></label>
           <select id="currency"><option value="EUR" selected>EUR</option><option value="CZK">CZK</option><option value="PLN">PLN</option></select>
         </div>
-        <div class="col-4 fld"><label>DPH % / MwSt %</label><input id="vat_rate" type="number" step="0.01" value="0"></div>
-        <div class="col-4 fld" data-key="vs">
-          <label>VS / Referenz</label>
-          <input id="vs">
-          <div class="hint"></div>
-          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="vs">✓ Nechať tak</button></div>
+        <div class="col-4 fld"><label>DPH % / MwSt % <span class="lock-ico">🔒</span></label><input id="vat_rate" type="number" step="0.01" value="0"></div>
+        <div class="col-4 fld">
+          <label>VS / Referenz <span>🔒</span></label>
+          <input id="vs" readonly>
+          <div class="hint">= číslo faktúry (len číslice)</div>
         </div>
         </div>
       </section>
@@ -430,6 +428,10 @@
           <div class="h3" style="margin-top:4px">Ktoré polia sa menia pri každej faktúre?</div>
           <p class="sub-note">Zaškrtnuté polia budú červené, kým sa nezmenia.</p>
           <div class="watch-list" id="watch_list"></div>
+
+          <div class="h3">Pevné polia</div>
+          <p class="sub-note">Mena (EUR), DPH (0 %) a Množstvo (1) sú zamknuté, aby sa omylom nezmenili.</p>
+          <div class="watch-list"><label><input type="checkbox" id="unlock_chk"> 🔓 Povoliť úpravu meny, DPH a množstva</label></div>
 
           <div class="h3">Záloha dát</div>
           <p class="sub-note" id="backup_info"></p>
@@ -651,7 +653,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     {key:'issue', label:'Dátum vystavenia'},
     {key:'delivery', label:'Dátum dodania'},
     {key:'due', label:'Dátum splatnosti'},
-    {key:'vs', label:'Variabilný symbol'},
     {key:'pay_msg', label:'Správa pre prijímateľa'},
     {key:'outro_bi', label:'Text pod faktúrou'},
     {key:'addendum_bi', label:'Dodatok'},
@@ -660,12 +661,67 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     {key:'item_name', label:'Položky – názov'},
     {key:'item_desc', label:'Položky – popis'},
   ];
-  const DEFAULT_WATCH=['number','site_name','period_from','period_to','issue','delivery','due','item_qty'];
+  const DEFAULT_WATCH=['number','site_name','period_from','period_to','issue','delivery','due','item_price'];
   const DATE_KEYS=new Set(['period_from','period_to','issue','delivery','due']);
   let watch=new Set(DEFAULT_WATCH);
   try{ const w=JSON.parse(lsGet(WATCH_KEY)||'null'); if(Array.isArray(w)) watch=new Set(w); }catch(e){}
   // jednorazovo: Stavba sa má tiež meniť (pridané neskôr) – doplň ju aj do uložených nastavení
   if(!lsGet('simple_watch_mig_site')){ watch.add('site_name'); lsSet(WATCH_KEY, JSON.stringify([...watch])); lsSet('simple_watch_mig_site','1'); }
+  // jednorazovo: množstvo je teraz pevne 1 – meniť sa bude cena
+  if(!lsGet('simple_watch_mig_price')){ watch.delete('item_qty'); watch.delete('vs'); watch.add('item_price'); lsSet(WATCH_KEY, JSON.stringify([...watch])); lsSet('simple_watch_mig_price','1'); }
+
+  // ---------- pevné polia (Mena, DPH, Množstvo) ----------
+  const UNLOCK_KEY='simple_unlock_v1';
+  const locked=()=> lsGet(UNLOCK_KEY)!=='1';
+  function applyLocks(){
+    const L=locked();
+    qs('#currency').disabled=L; qs('#vat_rate').readOnly=L;
+    if(L){ qs('#currency').value='EUR'; qs('#vat_rate').value='0'; }
+    qsa('.lock-ico').forEach(x=>x.style.display=L?'':'none');
+    qs('#unlock_chk').checked=!L;
+  }
+  // pri zamknutom množstve: množstvo = 1 a cena = celá suma položky (súčet ostane rovnaký)
+  function normItems(arr){
+    if(!locked()) return arr;
+    return arr.map(it=>{ const q=Number(it.qty);
+      if(it.qty===''||it.qty==null||q===1) return {...it, qty:1};
+      return {...it, qty:1, price:Math.round(q*(Number(it.price)||0)*100)/100}; });
+  }
+  // VS = číslo faktúry (len číslice)
+  function syncVS(){ qs('#vs').value=norm(qs('#number').value).replace(/\D/g,''); }
+
+  // ---------- výber mesiaca: obdobie, vystavenie, dodanie a splatnosť naraz ----------
+  const MONTHS=['január','február','marec','apríl','máj','jún','júl','august','september','október','november','december'];
+  const MONTHS_GEN=['januára','februára','marca','apríla','mája','júna','júla','augusta','septembra','októbra','novembra','decembra'];
+  function monthDates(y,m){
+    return { from:new Date(y,m,1), to:new Date(y,m+1,0), due:new Date(y,m+1,15) };   // splatnosť = posledný deň + 15 dní
+  }
+  const dm=(d)=> d.getDate()+'. '+(d.getMonth()+1)+'.';
+  function pickedMonth(){ return {y:+qs('#mp_year').value, m:+qs('#mp_month').value}; }
+  function updateMpHint(){
+    const {y,m}=pickedMonth(); const d=monthDates(y,m);
+    const applied = qs('#period_from').value===iso(d.from) && qs('#period_to').value===iso(d.to) && qs('#issue').value===iso(d.to) && qs('#delivery').value===iso(d.to) && qs('#due').value===iso(d.due);
+    qs('#mp_hint').innerHTML = (applied? '✓ <b>Dátumy sú nastavené na '+MONTHS[m]+' '+y+'.</b><br>' : 'Po stlačení sa nastaví:<br>')
+      +'Obdobie <b>'+dm(d.from)+' – '+dm(d.to)+' '+y+'</b> · vystavenie a dodanie <b>'+dm(d.to)+' '+y+'</b> · splatnosť <b>'+dm(d.due)+' '+d.due.getFullYear()+'</b>';
+    qs('.mp-btn').classList.toggle('applied', applied);
+    qs('.mp-btn').textContent = applied? '✓ Dátumy nastavené' : '📅 Nastaviť dátumy na '+MONTHS[m];
+  }
+  function applyMonth(){
+    const {y,m}=pickedMonth(); const d=monthDates(y,m);
+    setVal('period_from',iso(d.from)); setVal('period_to',iso(d.to));
+    setVal('issue',iso(d.to)); setVal('delivery',iso(d.to)); setVal('due',iso(d.due));
+  }
+  // navrhovaný mesiac = mesiac po minulej faktúre (inak minulý mesiac)
+  function initMonthPicker(){
+    let ref=parseIso(qs('#period_from').value);
+    if(!ref || qs('#period_from').value===state.base.period_from){
+      const b=parseIso(state.base.period_from)||parseIso(state.base.issue);
+      const t=new Date(); ref = b? new Date(b.getFullYear(), b.getMonth()+1, 1) : new Date(t.getFullYear(), t.getMonth()-1, 1);
+    }
+    const y=ref.getFullYear(), ys=qs('#mp_year'); ys.innerHTML='';
+    for(let k=y-2;k<=y+1;k++){ const o=document.createElement('option'); o.value=k; o.textContent=k; ys.appendChild(o); }
+    ys.value=y; qs('#mp_month').value=ref.getMonth();
+  }
 
   // ---------- stav ----------
   // base = údaje z predošlej faktúry (vzor), s ktorými sa porovnáva
@@ -724,8 +780,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div class="fld" data-ik="name"><label>Názov</label><input data-k="name" value="${esc(it.name)}"><div class="hint"></div></div>
         <div class="fld" data-ik="desc"><label>Popis</label><textarea data-k="desc">${esc(it.desc)}</textarea><div class="hint"></div></div>
         <div class="g2">
-          <div class="fld" data-ik="qty"><label>Množstvo (hodiny / kusy)</label><input data-k="qty" type="number" step="0.01" inputmode="decimal" value="${esc(it.qty)}"><div class="hint"></div></div>
-          <div class="fld" data-ik="price"><label>Cena za 1 (${esc(qs('#currency').value)})</label><input data-k="price" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"><div class="hint"></div></div>
+          <div class="fld" data-ik="qty"><label>Množstvo${locked()?' 🔒':''}</label><input data-k="qty" type="number" step="0.01" inputmode="decimal" value="${esc(it.qty)}" ${locked()?'readonly':''}><div class="hint"></div></div>
+          <div class="fld" data-ik="price"><label>${locked()?'Cena':'Cena za 1'} (${esc(qs('#currency').value)})</label><input data-k="price" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"><div class="hint"></div></div>
         </div>
         <div class="item-sum">Spolu za položku: <b id="isub_${i}">${money((Number(it.qty)||0)*(Number(it.price)||0))}</b></div>
       </div>`).join('');
@@ -773,13 +829,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       row.classList.toggle('has-need', rowNeed);
     });
 
-    const dh=document.querySelector('.fld[data-key="delivery"] .hint');
-    dh.innerHTML = (dh.innerHTML? dh.innerHTML+'<br>' : '') + 'Nastaví sa samo podľa „Obdobie do“.';
     // tlačidlo „ďalšie číslo“
     const nb=qs('[data-act="next-number"]'); const nn=nextNumber(state.base.number);
     if(nn && norm(qs('#number').value)!==nn){ nb.hidden=false; nb.textContent='Použiť ďalšie číslo: '+nn; } else nb.hidden=true;
-    // tlačidlo splatnosti
-    const db=qs('[data-act="due-days"]'); db.textContent='Splatnosť '+dueDays()+' dní od vystavenia';
+    updateMpHint();
     // suma platby
     qs('#pay_amount_fld').style.display = qs('#pay_use_total').checked ? 'none' : '';
 
@@ -812,11 +865,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const num=String(Number(m[1])+1).padStart(m[1].length,'0');
     return n.slice(0,m.index)+num+n.slice(m.index+m[1].length);
   }
-  function dueDays(){
-    const a=parseIso(state.base.issue), b=parseIso(state.base.due);
-    if(a&&b){ const d=Math.round((b-a)/86400000); if(d>=0 && d<=120) return d; }
-    return 14;
-  }
   function setVal(id,v){ const el=qs('#'+id); el.value=v; }
   // dátum dodania = vždy posledný deň obdobia
   function syncDelivery(){ const pt=qs('#period_to').value; if(pt) setVal('delivery', pt); }
@@ -824,7 +872,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function syncNumber(){
     const oldN=norm(state.base.number), newN=norm(qs('#number').value);
     if(!oldN || !newN) return;
-    ['vs','pay_msg'].forEach(id=>{
+    ['pay_msg'].forEach(id=>{
       const b=state.base[id]||'';
       if(b && b.includes(oldN)) setVal(id, b.split(oldN).join(newN));
       else { // napr. VS = číslo bez pomlčiek (2025-010 → 2025010)
@@ -911,13 +959,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     state.confirmed=new Set();
     if(row){
       const f=rowToFlat(row);
-      state.base=f; state.baseItems=(row.items||[]).map(x=>({...x}));
+      state.base=f; state.baseItems=normItems((row.items||[]).map(x=>({...x})));
       setFlat(f); state.items=state.baseItems.map(x=>({...x}));
     }else{
       state.base={}; state.baseItems=[];
-      const t=new Date(); setFlat({issue:iso(t), delivery:iso(t), due:iso(new Date(t.getTime()+14*86400000))});
-      state.items=[];
+      setFlat({}); state.items=[];
     }
+    applyLocks(); initMonthPicker();
     qs('#saved_msg').style.display='none';
     renderEditItems(); refresh(false);
   }
@@ -928,7 +976,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function refresh(persist=true){
-    updateStatus(); renderView();
+    syncVS(); updateStatus(); renderView();
     if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; }
   }
 
@@ -950,6 +998,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       t.checked? watch.add(t.dataset.watch) : watch.delete(t.dataset.watch);
       lsSet(WATCH_KEY, JSON.stringify([...watch])); applyLayout(); refresh(false); return;
     }
+    if(t.id==='unlock_chk'){
+      if(t.checked){ if(!confirm('Odomknúť menu, DPH a množstvo na úpravu?')){ t.checked=false; return; } lsSet(UNLOCK_KEY,'1'); }
+      else { lsDel(UNLOCK_KEY); state.items=normItems(state.items); state.baseItems=normItems(state.baseItems); }
+      applyLocks(); renderEditItems(); refresh(); return;
+    }
+    if(t.id==='mp_month' || t.id==='mp_year'){ applyMonth(); }
     if(t.id==='currency'){ renderEditItems(); }
     if(t.id==='period_to') syncDelivery();
     if(t.type==='checkbox' || t.tagName==='SELECT' || t.type==='date') refresh();
@@ -960,13 +1014,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const ok=b.dataset.ok;
     if(ok){ state.confirmed.add(ok); refresh(); return; }
     const act=b.dataset.act; if(!act) return;
-    const today=new Date();
-    if(act==='today'){ setVal(b.dataset.target, iso(today)); }
-    else if(act==='same-period'){ syncDelivery(); }
-    else if(act==='last-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth()-1, 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth(), 0))); syncDelivery(); }
-    else if(act==='this-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth(), 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth()+1, 0))); syncDelivery(); }
-    else if(act==='due-days'){ const a=parseIso(qs('#issue').value)||today; setVal('due', iso(new Date(a.getFullYear(), a.getMonth(), a.getDate()+dueDays()))); }
-    else if(act==='next-number'){ setVal('number', nextNumber(state.base.number)); syncNumber(); }
+    if(act==='next-number'){ setVal('number', nextNumber(state.base.number)); syncNumber(); }
     else if(act==='item-ok'){ const i=+b.closest('.item').dataset.i; ['name','desc','qty','price'].forEach(k=>state.confirmed.add('item_'+k+'_'+i)); }
     else if(act==='item-del'){ const i=+b.closest('.item').dataset.i; if(!confirm('Naozaj odstrániť položku '+(i+1)+'?')) return; state.items.splice(i,1); state.baseItems.splice(i,1); state.confirmed=new Set([...state.confirmed].filter(k=>!k.startsWith('item_'))); renderEditItems(); }
     else if(act==='use'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Vyplniť novú faktúru podľa faktúry '+(r.number||'')+'?')){ loadTemplate(r); saveDraft(); window.scrollTo({top:0,behavior:'smooth'}); } return; }
@@ -976,11 +1024,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     else if(act==='snap'){ const i=+b.dataset.i; const s=readJSON(SNAP_KEY,[])[i]; if(!s) return; let arr=[]; try{ arr=JSON.parse(s.data); }catch(e){} if(confirm('Vrátiť zoznam faktúr do stavu z '+new Date(s.ts).toLocaleString('sk-SK')+' ('+arr.length+' faktúr)?\nAktuálny stav sa tiež odloží.')){ saveAll(arr); renderArchive(); } return; }
     else if(act==='backup'){ downloadBackup(); return; }
     else if(act==='goto-next'){ gotoNext(); return; }
+    else if(act==='apply-month'){ applyMonth(); }
     else return;
     refresh();
   });
 
-  qs('#add-row').onclick=()=>{ const last=state.items[state.items.length-1]||{}; state.items.push({name:last.name||'',desc:'',qty:'',price:last.price||0}); renderEditItems(); refresh(); };
+  qs('#add-row').onclick=()=>{ const last=state.items[state.items.length-1]||{}; state.items.push({name:last.name||'',desc:'',qty:locked()?1:'',price:last.price||0}); renderEditItems(); refresh(); };
   qs('#btn-new').onclick=()=>{
     const r=latestRow();
     if(!r){ alert('Zatiaľ nie je uložená žiadna faktúra.'); return; }
@@ -1181,8 +1230,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     let d=null; try{ d=JSON.parse(lsGet(DRAFT_KEY)||'null'); }catch(e){}
     if(d && d.flat){
       state.base=d.base||{}; state.baseItems=d.baseItems||[]; state.confirmed=new Set(d.confirmed||[]);
-      setFlat(d.flat); state.items=(d.items||[]).map(x=>({...x}));
-      renderEditItems(); refresh(false);
+      state.baseItems=normItems(state.baseItems);
+      setFlat(d.flat); state.items=normItems((d.items||[]).map(x=>({...x})));
+      applyLocks(); initMonthPicker(); renderEditItems(); refresh(false);
     }else{
       loadTemplate(latestRow());
     }
