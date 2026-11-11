@@ -143,6 +143,10 @@
   .stamp-box .stamp-info{flex:1; min-width:180px;}
   .stamp-box .empty{width:120px; height:80px; display:flex; align-items:center; justify-content:center; border:2px dashed var(--input-line); border-radius:8px; color:var(--muted); font-size:13px; text-align:center;}
   .warn-box{margin-top:10px; padding:12px; border-radius:12px; background:var(--warn-bg); border:2px solid var(--warn-line); color:var(--warn-ink); font-size:16px;}
+  .mail-panel{margin-top:12px; padding:14px; border-radius:14px; background:var(--brand-bg); border:2px solid var(--brand); font-size:16px;}
+  .mail-panel[hidden]{display:none;}
+  .mail-panel .mp-title{font-size:19px; font-weight:800; margin-bottom:6px;}
+  .mail-panel .mp-line{margin:3px 0; word-break:break-word;}
   .saved-msg{display:none; margin-top:10px; padding:12px; border-radius:12px; background:var(--green-bg); color:var(--green); font-weight:700;}
 
   /* ===== A4 náhľad (rovnaký ako originál) ===== */
@@ -267,6 +271,7 @@
             <div class="col-6 fld"><label>IČO</label><input id="b_ico"></div>
             <div class="col-6 fld"><label>DIČ</label><input id="b_dic"></div>
             <div class="col-12 fld"><label>IČ DPH</label><input id="b_icdph"></div>
+            <div class="col-12 fld"><label>📧 E-mail firmy (komu posielať faktúru)</label><input id="b_email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="napr. buchhaltung@firma.at"></div>
           </div>
         </div>
         </div>
@@ -401,7 +406,17 @@
 
       <div style="margin-top:20px">
         <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
+        <button type="button" class="btn big" id="btn-mail" style="margin-top:10px">📧 Uložiť a poslať e-mailom</button>
         <div class="saved-msg" id="saved_msg"></div>
+        <div class="mail-panel" id="mail_panel" hidden>
+          <div class="mp-title">📧 E-mail je pripravený</div>
+          <div class="mp-line">Komu: <b id="mail_to"></b></div>
+          <div class="mp-line">Predmet: <b id="mail_subj"></b></div>
+          <div class="mp-line">Príloha: <b id="mail_file"></b></div>
+          <button type="button" class="btn big primary" id="btn-mail-open" style="margin-top:12px">📧 Otvoriť e-mail s faktúrou</button>
+          <div class="hint" id="mail_hint" style="margin-top:8px"></div>
+          <button type="button" class="btn small ghost" id="btn-mail-close" style="margin-top:6px">Zavrieť</button>
+        </div>
         <div class="warn-box" id="backup_warn" style="display:none">
           Odporúčam stiahnuť si zálohu faktúr (raz za mesiac), aby sa nestratili, ak by sa niečo stalo s mobilom/počítačom.
           <div style="margin-top:8px"><button type="button" class="btn small" data-act="backup">⬇️ Stiahnuť zálohu teraz</button></div>
@@ -1053,7 +1068,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       issue:d.issue||'', delivery:d.delivery||'', due:d.due||'', currency:d.currency||'EUR', vat_rate:vr, vs:d.vs||'',
       site:'', period_from:'', period_to:'',
       supplier:{party:party(d.seller), ico:d.seller?.ico||'', dic:d.seller?.dic||'', icdph:d.seller?.icdph||''},
-      buyer:{party:party(d.buyer), ico:d.buyer?.ico||'', dic:d.buyer?.dic||'', icdph:d.buyer?.icdph||''},
+      buyer:{party:party(d.buyer), ico:d.buyer?.ico||'', dic:d.buyer?.dic||'', icdph:d.buyer?.icdph||'', email:d.buyer?.mail||''},
       outro:d.outro||'', addendum:d.note||'',
       pay:{name:d.seller?.name||'', iban:d.iban||'', bic:d.bic||'', amount:total, use_total:true, msg:''},
       items, sums:{sub,vat,total}, legacy_key:key };
@@ -1074,7 +1089,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- polia ----------
-  const FIELD_IDS=['prefix','number','vs','s_party','s_ico','s_dic','s_icdph','b_party','b_ico','b_dic','b_icdph',
+  const FIELD_IDS=['prefix','number','vs','s_party','s_ico','s_dic','s_icdph','b_party','b_ico','b_dic','b_icdph','b_email',
     'site_name','period_from','period_to','issue','delivery','due','currency','vat_rate','outro_bi','addendum_bi',
     'pay_name','pay_iban','pay_bic','pay_amount','pay_msg'];
   const CHECK_IDS=['pay_use_total','show_qr'];
@@ -1172,7 +1187,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function rowToFlat(r){
     return { prefix:r.prefix||'faktura', number:r.number||'', vs:r.vs||'',
       s_party:r.supplier?.party||'', s_ico:r.supplier?.ico||'', s_dic:r.supplier?.dic||'', s_icdph:r.supplier?.icdph||'',
-      b_party:r.buyer?.party||'', b_ico:r.buyer?.ico||'', b_dic:r.buyer?.dic||'', b_icdph:r.buyer?.icdph||'',
+      b_party:r.buyer?.party||'', b_ico:r.buyer?.ico||'', b_dic:r.buyer?.dic||'', b_icdph:r.buyer?.icdph||'', b_email:r.buyer?.email||'',
       site_name:r.site||'', period_from:r.period_from||'', period_to:r.period_to||'',
       issue:r.issue||'', delivery:r.delivery||'', due:r.due||'',
       currency:r.currency||'EUR', vat_rate:String(r.vat_rate??0), outro_bi:r.outro||'', addendum_bi:r.addendum||'',
@@ -1190,7 +1205,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       id: Date.now(), prefix:f.prefix, number:f.number, issue:f.issue, delivery:f.delivery, due:f.due,
       currency:f.currency, vat_rate:t.vr, vs:f.vs, site:f.site_name, period_from:f.period_from, period_to:f.period_to,
       supplier:{party:f.s_party, ico:f.s_ico, dic:f.s_dic, icdph:f.s_icdph},
-      buyer:{party:f.b_party, ico:f.b_ico, dic:f.b_dic, icdph:f.b_icdph},
+      buyer:{party:f.b_party, ico:f.b_ico, dic:f.b_dic, icdph:f.b_icdph, email:f.b_email},
       outro:f.outro_bi, addendum:f.addendum_bi, show_qr:f.show_qr,
       pay:{name:f.pay_name, iban:f.pay_iban, bic:f.pay_bic, amount:(f.pay_use_total?t.total:Number(f.pay_amount||0)), use_total:f.pay_use_total, msg:f.pay_msg},
       items: state.items.map(x=>({...x})), sums:{sub:t.sub, vat:t.vat, total:t.total}
@@ -1437,7 +1452,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function refresh(persist=true){
     syncVS(); updateStatus(); renderView();
-    if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; }
+    if(persist){ saveDraft(); qs('#saved_msg').style.display='none'; qs('#mail_panel').hidden=true; }
   }
 
   // ---------- udalosti ----------
@@ -1525,6 +1540,51 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   qs('#btn-save-pdf').onclick=async ()=>{ if(doSave()){ await exportPDF(); } };
   qs('#btn-save-only').onclick=()=>{ doSave(); };
+
+  // ===== Odoslanie e-mailom – cez vlastnú e-mailovú aplikáciu (odíde z tvojej adresy, bez hesla) =====
+  let mailReady=null;
+  const MONTHS_DE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  function mailTexts(){
+    const f=getFlat(), t=totals(), num=norm(f.number);
+    const pf=parseIso(f.period_from), name=(norm(f.pay_name) || (f.s_party||'').split('\n')[0] || '').trim();
+    const per = pf? (MONTHS[pf.getMonth()]+' '+pf.getFullYear()) : (fmtDate(f.period_from)+' – '+fmtDate(f.period_to));
+    const perDe = pf? (MONTHS_DE[pf.getMonth()]+' '+pf.getFullYear()) : per;
+    const sum=money(t.total)+' EUR';
+    const subject='Faktúra '+num+' / Rechnung '+num;
+    const body='Dobrý deň,\n\nv prílohe posielam faktúru č. '+num+' za '+per+' na sumu '+sum+'.\n\n'
+      +'Sehr geehrte Damen und Herren,\n\nanbei sende ich Ihnen die Rechnung Nr. '+num+' für '+perDe+' über '+sum+'.\n\n'
+      +'S pozdravom / Mit freundlichen Grüßen\n'+name;
+    return {to:norm(f.b_email), subject, body};
+  }
+  const canShareFiles=()=>{ try{ return !!(navigator.canShare && navigator.canShare({files:[new File(['x'],'t.pdf',{type:'application/pdf'})]})); }catch(e){ return false; } };
+  qs('#btn-mail').onclick=async ()=>{
+    if(!doSave()) return;
+    const b=qs('#btn-mail'); b.disabled=true; b.textContent='⏳ Pripravujem PDF…';
+    try{
+      const pdf=await buildPDF(), m=mailTexts();
+      mailReady={...m, name:fileName()+'.pdf', blob: pdf? pdf.output('blob') : null, pdf};
+      qs('#mail_to').textContent = m.to || '— (doplň „E-mail firmy“ pri odberateľovi)';
+      qs('#mail_subj').textContent = m.subject; qs('#mail_file').textContent = mailReady.name;
+      qs('#mail_hint').innerHTML = canShareFiles()
+        ? 'Po ťuknutí vyber <b>Mail</b> alebo <b>Gmail</b>. PDF bude priložené.'+(m.to? ' Adresa firmy sa skopíruje – do poľa <b>Komu</b> ju vlož (podrž prst → Vložiť).':'')
+        : 'Otvorí sa tvoj e-mail s adresou, predmetom a textom. PDF sa zároveň stiahne – <b>pripoj ho</b> k e-mailu (ikona 📎 / „Pripojiť súbor“).';
+      qs('#mail_panel').hidden=false; qs('#mail_panel').scrollIntoView({behavior:'smooth', block:'center'});
+    } finally { b.disabled=false; b.textContent='📧 Uložiť a poslať e-mailom'; }
+  };
+  qs('#btn-mail-open').onclick=()=>{
+    const m=mailReady; if(!m) return;
+    if(m.to && navigator.clipboard) navigator.clipboard.writeText(m.to).catch(()=>{});
+    if(m.blob && canShareFiles()){
+      const file=new File([m.blob], m.name, {type:'application/pdf'});
+      navigator.share({files:[file], title:m.subject, text:m.body}).catch(err=>{ if(err && err.name!=='AbortError') mailtoFallback(m); });
+    } else mailtoFallback(m);
+  };
+  function mailtoFallback(m){
+    if(m.pdf) m.pdf.save(m.name);
+    const enc=encodeURIComponent;
+    location.href='mailto:'+(m.to||'')+'?subject='+enc(m.subject)+'&body='+enc(m.body+'\n\n(Faktúra je v prílohe ako PDF.)');
+  }
+  qs('#btn-mail-close').onclick=()=>{ qs('#mail_panel').hidden=true; };
   qs('#btn-mbar-save').onclick=()=>qs('#btn-save-pdf').onclick();
   let prevZoomed=false;
   qs('#btn-zoom-prev').onclick=()=>{ prevZoomed=!prevZoomed; qs('#btn-zoom-prev').textContent=prevZoomed?'🔍 Zmenšiť':'🔍 Zväčšiť'; if(prevZoomed) fitReset(); else fitPreview(); };
@@ -1648,10 +1708,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function setTitle(){ document.title=fileName(); }
   function fitReset(){ qs('#invoice').style.zoom=''; }
   async function exportPDF(){
+    const pdf=await buildPDF();
+    if(!pdf){ window.print(); fitPreview(); return; }
+    pdf.save(fileName()+'.pdf');
+  }
+  // vytvorí PDF faktúry (jsPDF); vráti null, ak knižnice nie sú k dispozícii
+  async function buildPDF(){
     const ready=()=> window.html2canvas && window.jspdf && window.jspdf.jsPDF;
     let tries=0; while(!ready() && tries++<80){ await new Promise(r=>setTimeout(r,100)); }
     setTitle(); fitReset();
-    if(!ready()){ window.print(); fitPreview(); return; }
+    if(!ready()) return null;
     document.body.classList.add('exporting'); fitReset();
     try{
       const node=qs('#invoice');
@@ -1666,7 +1732,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,h*210/pxW);
         y+=h; page++;
       }
-      pdf.save(fileName()+'.pdf');
+      return pdf;
     } finally { document.body.classList.remove('exporting'); fitPreview(); }
   }
 
