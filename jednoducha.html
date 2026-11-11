@@ -85,6 +85,7 @@
   .top-load{margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--line);}
   .load-btn{width:100%; padding:14px; font-size:19px; font-weight:700; border-color:var(--brand); color:var(--brand); background:#f5f8ff;}
   .load-btn:hover{background:#eaf0ff;}
+  .backup-bar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:12px; margin-bottom:10px; border:1px solid var(--line); border-radius:12px; background:#fff;}
   .warn-box{margin-top:10px; padding:12px; border-radius:12px; background:#fffbeb; border:2px solid #f59e0b; color:#92400e; font-size:16px;}
   .saved-msg{display:none; margin-top:10px; padding:12px; border-radius:12px; background:var(--green-bg); color:var(--green); font-weight:700;}
 
@@ -320,6 +321,13 @@
         <summary>Staršie faktúry <span id="arch_count" class="muted"></span></summary>
         <div class="inner">
           <p class="sub-note">„Použiť ako vzor“ = nová faktúra sa vyplní podľa tejto.</p>
+          <div class="backup-bar">
+            <div><b>Záloha všetkých faktúr (JSON)</b><div class="hint" id="backup_info2"></div></div>
+            <div class="acts">
+              <button type="button" class="btn small primary" data-act="backup">⬇️ Stiahnuť zálohu</button>
+              <label class="btn small" for="import-json" style="cursor:pointer">⬆️ Načítať zálohu</label>
+            </div>
+          </div>
           <div id="arch_list"></div>
           <div class="muted" id="arch_totals" style="margin-top:10px; font-size:15px"></div>
 
@@ -922,8 +930,11 @@
   }
   // záloha = rovnaký formát ako „Exportovať dáta“ v pôvodnej aplikácii (dá sa tam aj načítať)
   function downloadBackup(){
-    const blob=new Blob([JSON.stringify(loadAll(),null,2)],{type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='faktury-zaloha-'+iso(new Date())+'.json';
+    importLegacy();                       // nech sú v zálohe aj faktúry zo starších verzií aplikácie
+    const list=loadAll();
+    if(!list.length){ alert('Zatiaľ nie je uložená žiadna faktúra.'); return; }
+    const blob=new Blob([JSON.stringify(list,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='faktury-zaloha-'+iso(new Date())+'-'+list.length+'ks.json';
     document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1200);
     lsSet(LASTBK_KEY, String(Date.now())); renderArchive();
   }
@@ -979,6 +990,7 @@
 
     // pripomienka zálohy
     const last=Number(lsGet(LASTBK_KEY)||0); const days=last? Math.floor((Date.now()-last)/86400000) : null;
+    qs('#backup_info2').textContent = 'Uložených faktúr: '+list.length+' · Posledná záloha: '+(last? new Date(last).toLocaleDateString('sk-SK') : 'ešte nikdy');
     qs('#backup_info').textContent = 'Posledná záloha: '+(last? new Date(last).toLocaleDateString('sk-SK')+(days?` (pred ${days} dňami)`:' (dnes)') : 'ešte nikdy');
     const warn = list.length>0 && (days===null || days>=30);
     qs('#backup_warn').style.display = warn? '' : 'none';
