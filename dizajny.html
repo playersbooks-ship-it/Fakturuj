@@ -3,87 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dizajny faktúry</title>
+<title>Návrhy rozhrania</title>
+<script>try{ var t=localStorage.getItem('simple_theme_v1'); if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
 <style>
-  :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --page:#f3f4f6; --surface:#fff; --brand:#2563eb; --warn-bg:#fffbeb; --warn-line:#f59e0b; --warn-ink:#92400e; color-scheme:light; }
-  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; color-scheme:dark; } }
-  :root[data-theme="dark"]{ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; color-scheme:dark; }
+  :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --page:#f3f4f6; --surface:#fff; --brand:#2563eb; --brand-ink:#fff; --warn-bg:#fffbeb; --warn-line:#f59e0b; --warn-ink:#92400e; --ok:#15803d; color-scheme:light; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --brand-ink:#0b1120; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; --ok:#4ade80; color-scheme:dark; } }
+  :root[data-theme="dark"]{ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --brand-ink:#0b1120; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; --ok:#4ade80; color-scheme:dark; }
   body{ margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--page); color:var(--ink); }
-  main{ max-width:1100px; margin:0 auto; padding:24px 16px 40px; }
+  main{ max-width:1200px; margin:0 auto; padding:24px 16px 40px; }
   h1{ font-size:28px; margin:0 0 6px; }
-  .lead{ color:var(--muted); font-size:17px; margin:0 0 14px; line-height:1.5; }
+  .lead{ color:var(--muted); font-size:17px; margin:0 0 14px; line-height:1.5; max-width:820px; }
   .note{ background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-ink); border-radius:12px; padding:12px 14px; font-size:15px; margin-bottom:22px; line-height:1.5; }
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:18px; }
   .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
   .shots{ display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:10px 10px 0; background:var(--page); }
   .shots img{ width:100%; height:auto; display:block; border-radius:10px 10px 0 0; border:1px solid var(--line); border-bottom:none; }
   .info{ padding:14px 16px 18px; display:flex; flex-direction:column; gap:8px; flex:1; }
-  .info h2{ font-size:20px; margin:0; display:flex; align-items:center; gap:10px; }
-  .num{ display:inline-flex; width:30px; height:30px; border-radius:50%; background:var(--brand); color:var(--surface); align-items:center; justify-content:center; font-size:16px; }
-  .info p{ margin:0; color:var(--muted); font-size:15px; line-height:1.45; flex:1; }
-  .open{ display:block; text-align:center; padding:12px; border-radius:12px; background:var(--brand); color:var(--surface); font-weight:700; text-decoration:none; font-size:17px; }
+  .info h2{ font-size:20px; margin:0; display:flex; align-items:center; gap:8px; }
+  .num{ display:inline-flex; width:30px; height:30px; border-radius:50%; background:var(--brand); color:var(--brand-ink); align-items:center; justify-content:center; font-size:16px; flex:0 0 auto; }
+  .info p{ margin:0; color:var(--muted); font-size:15px; line-height:1.45; }
+  .info p.plus{ color:var(--ok); font-weight:600; flex:1; }
+  .open{ display:block; text-align:center; padding:12px; border-radius:12px; background:var(--brand); color:var(--brand-ink); font-weight:700; text-decoration:none; font-size:17px; }
   .back{ display:inline-block; margin-top:26px; color:var(--brand); font-weight:600; }
 </style>
 </head>
 <body>
 <main>
-  <h1>🎨 5 dizajnov faktúry</h1>
-  <p class="lead">Všetky dizajny fungujú rovnako ako súčasná aplikácia – líšia sa len vzhľadom. Vľavo svetlý, vpravo tmavý režim. Vyskúšaj ich na mobile aj na počítači a vyber, ktorý sa najlepšie číta.</p>
-  <p class="note">⚠️ Dizajny používajú <b>tie isté uložené faktúry</b> ako súčasná aplikácia. Ak v nich faktúru uložíš, uloží sa naozaj (dá sa zmazať v „Staršie faktúry“ – presunie sa do koša).</p>
+  <h1>🎨 5 návrhov rozhrania</h1>
+  <p class="lead">Päť úplne odlišných spôsobov, ako vystaviť faktúru. Všetky robia to isté (rovnaké uložené faktúry, rovnaké PDF s QR kódom a pečiatkou, fungujú aj bez internetu) – líšia sa tým, <b>ako sa ovládajú</b>. Vyskúšaj ich na mobile aj na počítači a vyber, ktorý je najpohodlnejší.</p>
+  <p class="note">⚠️ Návrhy používajú <b>tie isté uložené faktúry</b> ako súčasná aplikácia. Ak v nich faktúru uložíš, uloží sa naozaj (dá sa zmazať v súčasnej aplikácii v „Staršie faktúry“ – presunie sa do koša).</p>
   <div class="grid">
     <article class="card">
-      <div class="shots">
-        <img src="dizajny/nahlad-1.jpg" alt="Dizajn 1 – Veľké písmo (svetlý)" loading="lazy" width="312" height="592">
-        <img src="dizajny/nahlad-1-tmavy.jpg" alt="Dizajn 1 – Veľké písmo (tmavý)" loading="lazy" width="312" height="592">
-      </div>
+      <a class="shots" href="ui-1-sprievodca.html" aria-label="Otvoriť Sprievodca krok za krokom">
+        <img src="dizajny/ui-1-1.jpg" alt="Sprievodca krok za krokom – ukážka 1" loading="lazy" width="300" height="600">
+        <img src="dizajny/ui-1-2.jpg" alt="Sprievodca krok za krokom – ukážka 2" loading="lazy" width="300" height="600">
+      </a>
       <div class="info">
-        <h2><span class="num">1</span> Veľké písmo</h2>
-        <p>Veľký text, hrubé rámiky a veľké tlačidlá – najľahšie na čítanie, aj bez okuliarov.</p>
-        <a class="open" href="dizajn-1.html">Vyskúšať dizajn 1 →</a>
+        <h2><span class="num">1</span> 🧭 Sprievodca krok za krokom</h2>
+        <p>Na každej obrazovke len jedna otázka: číslo → mesiac → stavba → suma → kontrola. Veľké tlačidlá „Ďalej“ a ukazovateľ, koľko krokov ostáva.</p>
+        <p class="plus">👍 Najmenej sa dá pomýliť – nič netreba hľadať.</p>
+        <a class="open" href="ui-1-sprievodca.html">Vyskúšať →</a>
       </div>
     </article>
     <article class="card">
-      <div class="shots">
-        <img src="dizajny/nahlad-2.jpg" alt="Dizajn 2 – Minimalistický (svetlý)" loading="lazy" width="312" height="592">
-        <img src="dizajny/nahlad-2-tmavy.jpg" alt="Dizajn 2 – Minimalistický (tmavý)" loading="lazy" width="312" height="592">
-      </div>
+      <a class="shots" href="ui-2-na-fakture.html" aria-label="Otvoriť Úprava priamo na faktúre">
+        <img src="dizajny/ui-2-1.jpg" alt="Úprava priamo na faktúre – ukážka 1" loading="lazy" width="300" height="600">
+        <img src="dizajny/ui-2-2.jpg" alt="Úprava priamo na faktúre – ukážka 2" loading="lazy" width="300" height="600">
+      </a>
       <div class="info">
-        <h2><span class="num">2</span> Minimalistický</h2>
-        <p>Čisto biely, veľa vzduchu, bez rámikov a tieňov – pokojný a moderný.</p>
-        <a class="open" href="dizajn-2.html">Vyskúšať dizajn 2 →</a>
+        <h2><span class="num">2</span> 📝 Úprava priamo na faktúre</h2>
+        <p>Vidíš hotovú faktúru ako na papieri. Červené miesta treba zmeniť – ťukneš na ne a otvorí sa malé okienko. Tlačidlo „Ďalšie“ ťa prevedie po poradí.</p>
+        <p class="plus">👍 Hneď vidno, ako bude faktúra vyzerať.</p>
+        <a class="open" href="ui-2-na-fakture.html">Vyskúšať →</a>
       </div>
     </article>
     <article class="card">
-      <div class="shots">
-        <img src="dizajny/nahlad-3.jpg" alt="Dizajn 3 – Firemný (svetlý)" loading="lazy" width="312" height="592">
-        <img src="dizajny/nahlad-3-tmavy.jpg" alt="Dizajn 3 – Firemný (tmavý)" loading="lazy" width="312" height="592">
-      </div>
+      <a class="shots" href="ui-3-aplikacia.html" aria-label="Otvoriť Aplikácia so zoznamom">
+        <img src="dizajny/ui-3-1.jpg" alt="Aplikácia so zoznamom – ukážka 1" loading="lazy" width="300" height="600">
+        <img src="dizajny/ui-3-2.jpg" alt="Aplikácia so zoznamom – ukážka 2" loading="lazy" width="300" height="600">
+      </a>
       <div class="info">
-        <h2><span class="num">3</span> Firemný</h2>
-        <p>Tmavomodrá so zlatou, ostré rohy a pruhy pri sekciách – pôsobí ako účtovný program.</p>
-        <a class="open" href="dizajn-3.html">Vyskúšať dizajn 3 →</a>
+        <h2><span class="num">3</span> 📱 Aplikácia so zoznamom</h2>
+        <p>Ako bežná aplikácia v mobile: dole karty Faktúry / Nová / Moje údaje. Zoznam faktúr podľa rokov so súčtom, nová faktúra s červenými a zelenými bodkami.</p>
+        <p class="plus">👍 Prehľad všetkých faktúr na jednom mieste.</p>
+        <a class="open" href="ui-3-aplikacia.html">Vyskúšať →</a>
       </div>
     </article>
     <article class="card">
-      <div class="shots">
-        <img src="dizajny/nahlad-4.jpg" alt="Dizajn 4 – Pastelové karty (svetlý)" loading="lazy" width="312" height="592">
-        <img src="dizajny/nahlad-4-tmavy.jpg" alt="Dizajn 4 – Pastelové karty (tmavý)" loading="lazy" width="312" height="592">
-      </div>
+      <a class="shots" href="ui-4-porovnanie.html" aria-label="Otvoriť Porovnanie: minule → teraz">
+        <img src="dizajny/ui-4-1.jpg" alt="Porovnanie: minule → teraz – ukážka 1" loading="lazy" width="300" height="600">
+        <img src="dizajny/ui-4-2.jpg" alt="Porovnanie: minule → teraz – ukážka 2" loading="lazy" width="300" height="600">
+      </a>
       <div class="info">
-        <h2><span class="num">4</span> Pastelové karty</h2>
-        <p>Mäkké zelené farby, biele karty s tieňom a zaoblené tlačidlá – priateľský a hravý.</p>
-        <a class="open" href="dizajn-4.html">Vyskúšať dizajn 4 →</a>
+        <h2><span class="num">4</span> 📊 Porovnanie: minule → teraz</h2>
+        <p>Tabuľka: vľavo minulá faktúra, vpravo nová. Pri každom poli tlačidlá „+1“, „= rovnaké“, „↺ vrátiť“. Na počítači je vedľa živý náhľad faktúry.</p>
+        <p class="plus">👍 Najlepšie na počítači – všetko naraz pred očami.</p>
+        <a class="open" href="ui-4-porovnanie.html">Vyskúšať →</a>
       </div>
     </article>
     <article class="card">
-      <div class="shots">
-        <img src="dizajny/nahlad-5.jpg" alt="Dizajn 5 – Kompaktný (svetlý)" loading="lazy" width="312" height="592">
-        <img src="dizajny/nahlad-5-tmavy.jpg" alt="Dizajn 5 – Kompaktný (tmavý)" loading="lazy" width="312" height="592">
-      </div>
+      <a class="shots" href="ui-5-chat.html" aria-label="Otvoriť Rozhovor (chat)">
+        <img src="dizajny/ui-5-1.jpg" alt="Rozhovor (chat) – ukážka 1" loading="lazy" width="300" height="600">
+        <img src="dizajny/ui-5-2.jpg" alt="Rozhovor (chat) – ukážka 2" loading="lazy" width="300" height="600">
+      </a>
       <div class="info">
-        <h2><span class="num">5</span> Kompaktný</h2>
-        <p>Menšie písmo a tesnejšie rozloženie – viac údajov na obrazovke naraz, vhodné na počítač.</p>
-        <a class="open" href="dizajn-5.html">Vyskúšať dizajn 5 →</a>
+        <h2><span class="num">5</span> 💬 Rozhovor (chat)</h2>
+        <p>Aplikácia sa pýta ako v správach: „Číslo bude 2026-006, súhlasí?“ – odpovedáš ťuknutím na tlačidlo alebo napíšeš. Vie aj vypočítať sumu z hodín.</p>
+        <p class="plus">👍 Ako písať správy – netreba rozmýšľať, čo kde je.</p>
+        <a class="open" href="ui-5-chat.html">Vyskúšať →</a>
       </div>
     </article>
   </div>

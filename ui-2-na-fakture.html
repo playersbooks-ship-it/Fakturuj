@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faktúra – úprava na papieri</title>
+<script>try{ var t=localStorage.getItem('simple_theme_v1'); if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
+<style>
+  :root{ color-scheme:light; --desk:#d9d4cb; --desk2:#cfc9be; --surface:#fffdf8; --ink:#2b2620; --muted:#7a7166; --line:#e3ddd2; --input:#fff;
+         --accent:#c2410c; --accent-ink:#fff; --ok:#15803d; --need:#dc2626; --bar:rgba(255,253,248,.94); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark; --desk:#1c1a17; --desk2:#23201c; --surface:#26231f; --ink:#f1ece4; --muted:#a69d90; --line:#3a352f; --input:#1c1a17; --accent:#fb923c; --accent-ink:#1c1a17; --ok:#4ade80; --need:#f87171; --bar:rgba(38,35,31,.94); } }
+  :root[data-theme="dark"]{ color-scheme:dark; --desk:#1c1a17; --desk2:#23201c; --surface:#26231f; --ink:#f1ece4; --muted:#a69d90; --line:#3a352f; --input:#1c1a17; --accent:#fb923c; --accent-ink:#1c1a17; --ok:#4ade80; --need:#f87171; --bar:rgba(38,35,31,.94); }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif; color:var(--ink); min-height:100vh;
+       background:repeating-linear-gradient(90deg,var(--desk) 0 120px,var(--desk2) 120px 122px,var(--desk) 122px 240px);}
+  .top{position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--bar); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+  .top a,.top .ic{color:var(--ink); text-decoration:none; font-size:20px; background:none; border:none; cursor:pointer; padding:4px 6px;}
+  .st{flex:1; font-size:16px; font-weight:700;} .st.need{color:var(--need);} .st.done{color:var(--ok);}
+  .st small{display:block; font-weight:400; color:var(--muted); font-size:13px;}
+  @media (max-width:420px){ .st small{display:none;} .tip{font-size:15px;} .nextb{padding:9px 12px;} }
+  .nextb{font:inherit; font-size:15px; font-weight:700; border:none; border-radius:99px; padding:10px 14px; background:var(--accent); color:var(--accent-ink); cursor:pointer; white-space:nowrap;}
+  .tip{max-width:900px; margin:14px auto 0; padding:0 12px; font-size:17px; text-align:center; font-style:italic;}
+  .paper-wrap{max-width:900px; margin:12px auto 0; padding:0 12px 140px;}
+  .paper{background:#fff; box-shadow:0 2px 0 #eee, 0 18px 40px rgba(0,0,0,.28); border-radius:2px; overflow:hidden; transform:rotate(-.3deg);}
+  .bar{position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; gap:10px; justify-content:center; padding:12px 14px calc(14px + env(safe-area-inset-bottom)); background:var(--bar); backdrop-filter:blur(8px); border-top:1px solid var(--line); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+  .b{font:inherit; font-size:17px; font-weight:700; padding:15px 18px; border-radius:14px; border:2px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer;}
+  .b.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); flex:1; max-width:420px;}
+  /* editor v okne */
+  .ed{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; font-size:17px;}
+  .ed .lbl{color:var(--muted); font-size:14px; font-weight:600; margin:12px 0 6px;}
+  .ed input:not([type=checkbox]),.ed textarea{width:100%; font:inherit; font-size:22px; padding:14px; border:2px solid var(--line); border-radius:12px; background:var(--input); color:var(--ink);}
+  .ed textarea{font-size:17px; min-height:70px;}
+  .ed .prev{color:var(--muted); font-size:15px; margin-top:8px;} .ed .prev b{color:var(--ink);}
+  .ed .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+  .ed .chip{font:inherit; font-size:15px; border:2px solid var(--line); background:var(--surface); color:var(--ink); border-radius:99px; padding:9px 14px; cursor:pointer;}
+  .ed .chip.on{border-color:var(--accent);}
+  .ed .ok{width:100%; margin-top:18px; font:inherit; font-size:19px; font-weight:700; padding:15px; border:none; border-radius:14px; background:var(--accent); color:var(--accent-ink); cursor:pointer;}
+  .ed .keep{width:100%; margin-top:10px; font:inherit; font-size:16px; padding:12px; border:2px solid var(--line); border-radius:14px; background:transparent; color:var(--ok); cursor:pointer;}
+  .months{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .months button{font:inherit; font-size:15px; padding:12px 4px; border-radius:12px; border:2px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer;}
+  .months button.on{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700;}
+  .year{display:flex; align-items:center; justify-content:center; gap:16px; margin:4px 0 12px; font-size:20px; font-weight:700;}
+  .year button{width:40px; height:40px; border-radius:50%; border:2px solid var(--line); background:var(--surface); color:var(--ink); font-size:18px; cursor:pointer;}
+  .dl{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin-top:14px; font-size:15px;} .dl span{color:var(--muted);} .dl b{text-align:right;}
+  .cg{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;} .cg input{font-size:17px !important; padding:10px !important;}
+  details{margin-top:14px;} summary{cursor:pointer; color:var(--accent); font-weight:600;}
+  .pulse .j-e.need{animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.0);} 50%{box-shadow:0 0 0 6px rgba(220,38,38,.18);}}
+  .j-e.flash{animation:flash 1s ease-out 2;}
+  @keyframes flash{0%{box-shadow:0 0 0 10px rgba(194,65,12,.45);} 100%{box-shadow:0 0 0 0 rgba(194,65,12,0);}}
+  .toast{position:fixed; left:50%; bottom:110px; transform:translateX(-50%); background:#1f2937; color:#fff; padding:12px 18px; border-radius:12px; font-family:system-ui,sans-serif; font-size:16px; z-index:30; box-shadow:0 10px 30px rgba(0,0,0,.3);}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="dizajny.html" aria-label="Späť na prehľad dizajnov">←</a>
+  <div class="st" id="st"></div>
+  <button type="button" class="nextb" id="nextb">👉 Ďalšie</button>
+  <button type="button" class="ic" id="theme" aria-label="Tmavý režim"></button>
+</header>
+<p class="tip" id="tip">Ťukni priamo na <b style="color:var(--need)">červené</b> miesto na faktúre a zmeň ho. Ťuknúť sa dá na čokoľvek.</p>
+<div class="paper-wrap"><div class="paper pulse" id="paper"></div></div>
+<div class="bar">
+  <button type="button" class="b" id="other" title="Vybrať inú faktúru ako vzor">📂</button>
+  <button type="button" class="b primary" id="save">💾 Uložiť a stiahnuť PDF</button>
+</div>
+
+<script src="lib/qrcode.min.js"></script>
+<script src="lib/html2canvas.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="jadro.js"></script>
+<script>
+(function(){
+const {qs, esc, money, fmtDate} = J;
+let {inv, base} = J.startNew();
+let confirmed = new Set();
+const sug = () => J.suggest(base);
+J.initTheme(qs('#theme'));
+
+function state(){ const s={}; J.status(inv,base,confirmed).forEach(x=> s[x.key]= x.ok? 'done':'need'); return s; }
+function render(){
+  J.recalc(inv, base);
+  J.mount(qs('#paper'), inv, {edit:true, state:state()});
+  const miss=J.status(inv,base,confirmed).filter(x=>!x.ok);
+  const st=qs('#st');
+  st.className='st '+(miss.length?'need':'done');
+  st.innerHTML = miss.length? `✏️ Zostáva: ${miss.length}<small>${esc(miss.map(m=>m.label).join(', '))}</small>` : '✓ Všetko hotové<small>Môžeš uložiť</small>';
+  qs('#nextb').style.visibility = miss.length? 'visible':'hidden';
+}
+qs('#paper').addEventListener('click', e=>{ const s=e.target.closest('.j-e'); if(s) edit(s.dataset.f); });
+
+function sheet(title, html, bind, keepKey){
+  const d=document.createElement('div'); d.className='ed'; d.innerHTML = html + (keepKey && base? `<button type="button" class="keep" id="keep">✓ Nechať ako minule</button>`:'') + `<button type="button" class="ok" id="okb">Hotovo</button>`;
+  let close; close = J.sheet(title, d, render);
+  bind && bind(d, ()=>close());
+  d.querySelector('#okb').onclick=()=>close();
+  const k=d.querySelector('#keep'); if(k) k.onclick=()=>{ confirmed.add(keepKey); close(); };
+  const f=d.querySelector('input:not([type=checkbox]),textarea'); if(f && !matchMedia('(pointer:coarse)').matches) setTimeout(()=>f.focus(),50);
+}
+
+function edit(f){
+  if(f==='number'){
+    const s=sug().number;
+    sheet('Číslo faktúry', `<input id="v" value="${esc(inv.number)}" autocomplete="off">${base? `<div class="prev">Minule: <b>${esc(base.number)}</b></div>`:''}
+      ${s? `<div class="chips"><button type="button" class="chip" id="s">Použiť ďalšie: ${esc(s)}</button></div>`:''}`,
+      (d)=>{ d.querySelector('#v').oninput=e=>{ inv.number=e.target.value; render(); }; const b=d.querySelector('#s'); if(b) b.onclick=()=>{ inv.number=s; d.querySelector('#v').value=s; render(); }; }, 'number');
+  }
+  else if(f==='month'){
+    const sg=sug(); let y=(J.monthOf(inv)||sg).y;
+    const body=()=>{ const cur=J.monthOf(inv); return `<div class="year"><button type="button" data-y="-1">‹</button><span>${y}</span><button type="button" data-y="1">›</button></div>
+      <div class="months">${J.MONTHS_CAP.map((m,i)=>`<button type="button" data-m="${i}" class="${cur&&cur.y===y&&cur.m===i?'on':''}">${m}</button>`).join('')}</div>
+      <div class="dl"><span>Obdobie</span><b>${fmtDate(inv.period_from)} – ${fmtDate(inv.period_to)}</b><span>Vystavená a dodanie</span><b>${fmtDate(inv.issue)}</b><span>Splatnosť</span><b>${fmtDate(inv.due)}</b></div>`; };
+    sheet('Za ktorý mesiac?', `<div id="mb">${body()}</div>`, (d)=>{
+      const mb=d.querySelector('#mb');
+      mb.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.y){ y+=+b.dataset.y; } else { J.setMonth(inv,y,+b.dataset.m); render(); } mb.innerHTML=body(); });
+    });
+  }
+  else if(f==='site'){
+    const recent=[...new Set(J.sorted().map(r=>J.norm(r.site)).filter(Boolean))].slice(0,6);
+    sheet('Stavba', `<input id="v" value="${esc(inv.site)}" autocomplete="off">${base? `<div class="prev">Minule: <b>${esc(base.site)||'–'}</b></div>`:''}
+      ${recent.length? `<div class="chips">${recent.map(s=>`<button type="button" class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>`:''}`,
+      (d)=>{ const v=d.querySelector('#v'); v.oninput=e=>{ inv.site=e.target.value; render(); }; d.querySelectorAll('[data-s]').forEach(c=>c.onclick=()=>{ inv.site=c.dataset.s; v.value=inv.site; render(); }); }, 'site');
+  }
+  else if(f==='price'){
+    const p=J.calcPrefs(), mo=J.monthOf(inv)||sug();
+    sheet('Suma', inv.items.map((it,i)=>`<div class="lbl">${esc(it.name||'Položka '+(i+1))}</div><input class="pr" data-i="${i}" type="number" step="0.01" inputmode="decimal" value="${it.price||''}">${base&&base.items[i]? `<div class="prev">Minule: <b>${money(base.items[i].price)} €</b></div>`:''}`).join('')+
+      `<details><summary>🧮 Vypočítať z hodín</summary><div class="cg" style="margin-top:10px"><div><div class="lbl">Dni</div><input id="cd" type="number" value="${J.workdays(mo.y,mo.m)}"></div><div><div class="lbl">Hod./deň</div><input id="ch" type="number" step="0.25" value="${esc(p.hpd)}"></div><div><div class="lbl">€/h</div><input id="cr" type="number" step="0.01" value="${esc(p.rate)}"></div></div><div class="prev" id="cres"></div><div class="chips"><button type="button" class="chip" id="ca">✓ Použiť</button></div></details>`,
+      (d)=>{ d.querySelectorAll('.pr').forEach(x=>x.oninput=()=>{ inv.items[+x.dataset.i].price=Number(x.value)||0; render(); });
+        const v=id=>Number(d.querySelector(id).value)||0, up=()=>{ const t=Math.round(v('#cd')*v('#ch')*v('#cr')*100)/100; d.querySelector('#cres').innerHTML=`${v('#cd')} × ${v('#ch')} h × ${v('#cr')} €/h = <b>${money(t)} €</b>`; return t; };
+        ['#cd','#ch','#cr'].forEach(id=>d.querySelector(id).oninput=up); up();
+        d.querySelector('#ca').onclick=()=>{ const t=up(); if(!t) return; J.saveCalcPrefs(v('#ch'),v('#cr')); inv.items[0].price=t; d.querySelector('.pr').value=t; render(); };
+      }, 'price');
+  }
+  else if(f==='item'){
+    sheet('Položky', inv.items.map((it,i)=>`<div class="lbl">Názov ${i+1}</div><input data-i="${i}" data-k="name" value="${esc(it.name)}"><div class="lbl">Popis</div><textarea data-i="${i}" data-k="desc">${esc(it.desc)}</textarea>`).join(''),
+      (d)=>{ d.addEventListener('input',e=>{ const t=e.target; if(t.dataset.k){ inv.items[+t.dataset.i][t.dataset.k]=t.value; render(); } }); });
+  }
+  else { J.sheet('Stále údaje', J.fixedForm(inv, render), render); }
+}
+
+// ďalšie červené miesto
+qs('#nextb').onclick=()=>{
+  const m=J.status(inv,base,confirmed).find(x=>!x.ok); if(!m) return;
+  const el=qs(`#paper .j-e[data-f="${m.key}"]`); if(!el) return edit(m.key);
+  el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('flash'); setTimeout(()=>{ el.classList.remove('flash'); edit(m.key); }, 650);
+};
+qs('#save').onclick=async()=>{
+  const miss=J.status(inv,base,confirmed).filter(x=>!x.ok);
+  if(miss.length && !confirm('Ešte nie je zmenené:\n\n• '+miss.map(m=>m.label).join('\n• ')+'\n\nNaozaj uložiť takto?')) return;
+  if(!J.save(inv)) return;
+  await J.pdf(inv);
+  toast('✓ Faktúra '+inv.number+' je uložená a PDF stiahnuté');
+  ({inv,base}=J.startNew()); confirmed=new Set(); render();
+};
+qs('#other').onclick=()=>{
+  const d=document.createElement('div'); d.className='ed'; const list=J.sorted();
+  d.innerHTML = `<p class="prev">Vyber faktúru, podľa ktorej sa vyplní nová:</p>` + list.map(r=>`<button type="button" class="chip" style="display:block;width:100%;text-align:left;margin-top:8px;border-radius:12px" data-id="${r.id}"><b>${esc(r.number)}</b> · ${esc(fmtDate(r.issue))} · ${money(r.sums?.total)} €<br><small style="color:var(--muted)">${esc((r.buyer?.party||'').split('\n')[0])} · ${esc(r.site||'')}</small></button>`).join('');
+  let close; d.addEventListener('click',e=>{ const b=e.target.closest('[data-id]'); if(!b) return; const r=list.find(x=>x.id===+b.dataset.id); base=J.normalize(r); delete base.id; inv=J.normalize(r); delete inv.id; confirmed=new Set(); close(); });
+  close=J.sheet('Iná faktúra ako vzor', d, render);
+};
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(), 3500); }
+addEventListener('resize',()=>J.fit(qs('#paper')));
+render();
+})();
+</script>
+</body>
+</html>

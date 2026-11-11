@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faktúry – aplikácia</title>
+<script>try{ var t=localStorage.getItem('simple_theme_v1'); if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
+<style>
+  :root{ color-scheme:light; --page:#f2f2f7; --surface:#fff; --ink:#000; --muted:#8a8a8e; --line:#e5e5ea; --input:#fff; --fill:#f2f2f7;
+         --brand:#007aff; --brand-ink:#fff; --red:#ff3b30; --green:#34c759; --bar:rgba(249,249,249,.92); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark; --page:#000; --surface:#1c1c1e; --ink:#fff; --muted:#8d8d93; --line:#38383a; --input:#1c1c1e; --fill:#2c2c2e; --brand:#0a84ff; --brand-ink:#fff; --red:#ff453a; --green:#30d158; --bar:rgba(22,22,24,.92); } }
+  :root[data-theme="dark"]{ color-scheme:dark; --page:#000; --surface:#1c1c1e; --ink:#fff; --muted:#8d8d93; --line:#38383a; --input:#1c1c1e; --fill:#2c2c2e; --brand:#0a84ff; --brand-ink:#fff; --red:#ff453a; --green:#30d158; --bar:rgba(22,22,24,.92); }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif; background:var(--page); color:var(--ink); font-size:17px; -webkit-font-smoothing:antialiased;}
+  main{max-width:680px; margin:0 auto; padding:calc(10px + env(safe-area-inset-top)) 16px 120px;}
+  .nav-top{display:flex; justify-content:space-between; align-items:center; height:40px;}
+  .nav-top a,.nav-top button{color:var(--brand); text-decoration:none; font-size:17px; background:none; border:none; cursor:pointer; padding:6px 0;}
+  h1{font-size:34px; font-weight:800; letter-spacing:-.02em; margin:4px 0 14px;}
+  .sec-t{font-size:13px; text-transform:uppercase; color:var(--muted); margin:22px 16px 7px; letter-spacing:.02em;}
+  .group{background:var(--surface); border-radius:12px; overflow:hidden;}
+  .cell{display:flex; align-items:center; gap:12px; min-height:52px; padding:10px 16px; position:relative;}
+  .cell + .cell::before{content:""; position:absolute; top:0; left:16px; right:0; border-top:.5px solid var(--line);}
+  .cell .lab{flex:0 0 auto; min-width:92px;}
+  @media (max-width:400px){ .cell .lab{min-width:0; max-width:42%; font-size:16px;} .cell input{min-width:86px;} .mini{padding:6px 8px; font-size:13px;} h1{font-size:30px;} }
+  .cell .grow{flex:1; min-width:0;}
+  .cell input{width:100%; border:none; background:transparent; font:inherit; color:var(--ink); text-align:right; padding:6px 0; outline:none;}
+  .cell input::placeholder{color:var(--muted);}
+  .cell .sub{color:var(--muted); font-size:14px; margin-top:2px;}
+  .dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto; background:var(--red);} .dot.ok{background:var(--green);}
+  .tap{cursor:pointer;} .tap:active{background:var(--fill);}
+  .chev{color:var(--muted); font-size:20px;}
+  .mini{font:inherit; font-size:14px; color:var(--brand); background:var(--fill); border:none; border-radius:8px; padding:6px 10px; cursor:pointer; white-space:nowrap;}
+  .mchips{display:flex; gap:8px; overflow-x:auto; padding:4px 16px 14px; scrollbar-width:none;} .mchips::-webkit-scrollbar{display:none;}
+  .mchip{flex:0 0 auto; font:inherit; font-size:15px; padding:10px 14px; border-radius:12px; border:none; background:var(--fill); color:var(--ink); cursor:pointer; text-align:center; line-height:1.2;}
+  .mchip small{display:block; font-size:12px; color:var(--muted);}
+  .mchip.on{background:var(--brand); color:var(--brand-ink);} .mchip.on small{color:var(--brand-ink); opacity:.8;}
+  .dates{padding:0 16px 14px; color:var(--muted); font-size:14px; line-height:1.6;} .dates b{color:var(--ink); font-weight:600;}
+  .progress{display:flex; align-items:center; gap:10px; background:var(--surface); border-radius:12px; padding:12px 16px; font-size:15px;}
+  .progress .ring{width:34px; height:34px; border-radius:50%; flex:0 0 auto; background:conic-gradient(var(--green) calc(var(--p)*1%), var(--fill) 0); display:grid; place-items:center;}
+  .progress .ring::after{content:""; width:24px; height:24px; border-radius:50%; background:var(--surface);}
+  .bigbtn{display:block; width:100%; margin-top:22px; font:inherit; font-size:17px; font-weight:600; padding:16px; border:none; border-radius:14px; background:var(--brand); color:var(--brand-ink); cursor:pointer;}
+  .bigbtn.sec{background:var(--surface); color:var(--brand);}
+  .sum{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .sum div{background:var(--surface); border-radius:12px; padding:14px 16px;} .sum b{display:block; font-size:22px; margin-top:2px;} .sum span{color:var(--muted); font-size:14px;}
+  .inv-row .num{font-weight:600;} .inv-row .amt{font-weight:600; text-align:right; white-space:nowrap;}
+  .empty{text-align:center; color:var(--muted); padding:40px 20px;}
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; background:var(--bar); backdrop-filter:saturate(180%) blur(20px); border-top:.5px solid var(--line); padding-bottom:env(safe-area-inset-bottom);}
+  .tabs button{flex:1; font:inherit; font-size:11px; padding:8px 0 10px; background:none; border:none; color:var(--muted); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .tabs button .i{font-size:24px; line-height:1; filter:grayscale(1); opacity:.7;}
+  .tabs button.on{color:var(--brand);} .tabs button.on .i{filter:none; opacity:1;}
+  .tabs .badge{position:absolute; margin-left:22px; margin-top:-2px; background:var(--red); color:#fff; font-size:11px; border-radius:99px; padding:1px 6px;}
+  .tabs button{position:relative;}
+  .acts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .acts button{font:inherit; font-size:16px; padding:14px; border:none; border-radius:12px; background:var(--fill); color:var(--brand); cursor:pointer; font-weight:600;}
+  .acts button.del{color:var(--red);}
+  .pv{border-radius:10px; overflow:hidden; background:#fff; border:.5px solid var(--line);}
+  .j-form{padding:0 4px;}
+  .calc{padding:0 16px 14px;} .calc .cg{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .calc label{font-size:12px; color:var(--muted);} .calc input{width:100%; font:inherit; padding:10px; border:none; border-radius:10px; background:var(--fill); color:var(--ink); margin-top:3px;}
+  .calc .r{font-size:15px; margin:10px 0;}
+  .toast{position:fixed; left:50%; top:20px; transform:translateX(-50%); background:var(--surface); color:var(--ink); padding:12px 18px; border-radius:14px; font-size:15px; z-index:50; box-shadow:0 10px 30px rgba(0,0,0,.2); font-weight:600;}
+</style>
+</head>
+<body>
+<main id="main"></main>
+<nav class="tabs" aria-label="Hlavné menu">
+  <button type="button" data-tab="list"><span class="i">🧾</span>Faktúry</button>
+  <button type="button" data-tab="new"><span class="i">➕</span>Nová<span class="badge" id="badge" hidden></span></button>
+  <button type="button" data-tab="me"><span class="i">👤</span>Moje údaje</button>
+</nav>
+
+<script src="lib/qrcode.min.js"></script>
+<script src="lib/html2canvas.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="jadro.js"></script>
+<script>
+(function(){
+const {qs, qsa, esc, money, fmtDate} = J;
+let tab='new', {inv, base} = J.startNew(), confirmed=new Set();
+const main=qs('#main');
+
+function setTab(t){ tab=t; qsa('.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===t)); render(); window.scrollTo({top:0}); }
+qsa('.tabs button').forEach(b=> b.onclick=()=>setTab(b.dataset.tab));
+function render(){ J.recalc(inv,base); ({list, new:nova, me})[tab](); badge(); }
+function badge(){ const n=J.status(inv,base,confirmed).filter(x=>!x.ok).length; const b=qs('#badge'); b.hidden=!n; b.textContent=n; }
+const topbar=(right='')=>`<div class="nav-top"><a href="dizajny.html">‹ Dizajny</a>${right}</div>`;
+
+/* ---------- Faktúry ---------- */
+function list(){
+  const all=J.sorted(), y=new Date().getFullYear();
+  const thisYear=all.filter(r=>(r.issue||'').startsWith(String(y)));
+  const byYear={}; all.forEach(r=>{ const k=(r.issue||'').slice(0,4)||'Bez dátumu'; (byYear[k]=byYear[k]||[]).push(r); });
+  main.innerHTML = topbar() + `<h1>Faktúry</h1>
+    <div class="sum"><div><span>Rok ${y}</span><b>${money(thisYear.reduce((s,r)=>s+(r.sums?.total||0),0))} €</b></div><div><span>Počet faktúr</span><b>${thisYear.length}</b></div></div>
+    ${all.length? Object.keys(byYear).sort().reverse().map(k=>`<div class="sec-t">${esc(k)}</div><div class="group">${byYear[k].map(r=>{ const mo=J.monthOf(r);
+      return `<div class="cell tap inv-row" data-id="${r.id}"><div class="grow"><div class="num">${esc(r.number)}</div><div class="sub">${mo? esc(J.monthLabel(mo.y,mo.m)) : esc(fmtDate(r.issue))}${r.site? ' · '+esc(r.site):''}</div></div><div class="amt">${money(r.sums?.total)} €</div><span class="chev">›</span></div>`; }).join('')}</div>`).join('')
+      : `<div class="empty">Zatiaľ žiadne faktúry.<br>Vytvor prvú v karte <b>Nová</b>.</div>`}`;
+  qsa('.inv-row').forEach(c=> c.onclick=()=>detail(all.find(r=>r.id===+c.dataset.id)));
+}
+function detail(r){
+  const n=J.recalc(J.normalize(r));
+  const d=document.createElement('div');
+  d.innerHTML=`<div class="pv" id="dpv"></div><div class="acts">
+    <button type="button" data-a="pdf">⬇️ Stiahnuť PDF</button><button type="button" data-a="print">🖨️ Vytlačiť</button>
+    <button type="button" data-a="tpl">📋 Použiť ako vzor</button><button type="button" data-a="del" class="del">🗑️ Zmazať</button></div>`;
+  const close=J.sheet('Faktúra '+r.number, d);
+  J.mount(d.querySelector('#dpv'), n);
+  d.querySelector('.acts').onclick=(e)=>{ const a=e.target.dataset.a; if(!a) return;
+    if(a==='pdf') J.pdf(n); if(a==='print') J.print(n);
+    if(a==='tpl'){ base=J.normalize(r); delete base.id; inv=J.normalize(r); delete inv.id; confirmed=new Set(); close(); setTab('new'); }
+    if(a==='del' && confirm('Zmazať faktúru '+r.number+'? (Presunie sa do koša v hlavnej aplikácii.)')){ J.remove(r.id); close(); render(); } };
+}
+
+/* ---------- Nová ---------- */
+function nova(){
+  const st=J.status(inv,base,confirmed), ok=Object.fromEntries(st.map(s=>[s.key,s.ok])), done=st.filter(s=>s.ok).length;
+  const sg=J.suggest(base), cur=J.monthOf(inv);
+  const months=[-2,-1,0,1].map(k=>{ const d=new Date(sg.y, sg.m+k, 1); return {y:d.getFullYear(), m:d.getMonth()}; });
+  const p=J.calcPrefs(), mo=cur||sg;
+  main.innerHTML = topbar(`<button type="button" id="th"></button>`) + `<h1>Nová faktúra</h1>
+    <div class="progress" style="--p:${done/st.length*100}"><div class="ring"></div><div><b>${done} z ${st.length}</b> hotové${done<st.length? ' – zmeň položky s <span style="color:var(--red)">●</span>':' – môžeš uložiť ✓'}</div></div>
+    <div class="sec-t">Číslo</div>
+    <div class="group"><div class="cell"><span class="dot ${ok.number?'ok':''}"></span><div class="lab">Číslo faktúry</div><div class="grow"><input id="num" value="${esc(inv.number)}" autocomplete="off"></div></div>${sg.number && inv.number!==sg.number? `<div class="cell tap" id="nn" style="color:var(--brand)">↻ Použiť ďalšie číslo: <b>${esc(sg.number)}</b></div>`:''}</div>
+    <div class="sec-t">Za mesiac</div>
+    <div class="group"><div class="cell" style="padding-bottom:4px"><span class="dot ${ok.month?'ok':''}"></span><div class="grow">${cur? esc(J.monthLabel(cur.y,cur.m)) : 'Vyber mesiac'}</div></div>
+      <div class="mchips">${months.map(x=>`<button type="button" class="mchip ${cur&&cur.y===x.y&&cur.m===x.m?'on':''}" data-y="${x.y}" data-m="${x.m}">${J.MONTHS_CAP[x.m]}<small>${x.y}</small></button>`).join('')}
+        <button type="button" class="mchip" id="other">Iný…<small>mesiac</small></button></div>
+      ${inv.period_from? `<div class="dates">Obdobie <b>${fmtDate(inv.period_from)} – ${fmtDate(inv.period_to)}</b> · vystavené a dodané <b>${fmtDate(inv.issue)}</b> · splatné <b>${fmtDate(inv.due)}</b></div>`:''}</div>
+    <div class="sec-t">Stavba</div>
+    <div class="group"><div class="cell"><span class="dot ${ok.site?'ok':''}"></span><div class="lab">Stavba</div><div class="grow"><input id="site" value="${esc(inv.site)}" autocomplete="off"></div>${base&&!ok.site? `<button type="button" class="mini" data-keep="site">Rovnaká</button>`:''}</div></div>
+    <div class="sec-t">Suma</div>
+    <div class="group">${inv.items.map((it,i)=>`<div class="cell"><span class="dot ${ok.price?'ok':''}"></span><div class="lab">${esc((it.name||'Cena').split('/')[0].trim().slice(0,22))}</div><div class="grow"><input class="pr" data-i="${i}" type="number" step="0.01" inputmode="decimal" value="${it.price||''}" placeholder="0,00"></div><span>€</span></div>`).join('')}
+      <details class="calc"><summary class="mini" style="display:inline-block;margin-top:6px">🧮 Z hodín</summary>
+        <div class="cg" style="margin-top:10px"><label>Dni<input id="cd" type="number" value="${J.workdays(mo.y,mo.m)}"></label><label>Hod./deň<input id="ch" type="number" step="0.25" value="${esc(p.hpd)}"></label><label>€/h<input id="cr" type="number" step="0.01" value="${esc(p.rate)}"></label></div>
+        <div class="r" id="cres"></div><button type="button" class="mini" id="ca">✓ Použiť</button></details></div>
+    ${base? `<div class="sec-t">Minule</div><div class="group"><div class="cell"><div class="grow sub" style="margin:0">${esc(base.number)} · ${esc(base.site||'–')} · ${money(base.items.reduce((s,it)=>s+it.price,0))} €</div></div></div>`:''}
+    <div class="sec-t">Faktúra</div>
+    <div class="group"><div class="cell tap" id="pvbtn"><div class="grow">👁 Náhľad faktúry</div><span class="chev">›</span></div>
+      <div class="cell tap" id="mebtn"><div class="grow">👤 Odberateľ, IBAN, pečiatka<div class="sub">${esc((inv.buyer.party||'').split('\n')[0])||'–'}</div></div><span class="chev">›</span></div></div>
+    <button type="button" class="bigbtn" id="save">Uložiť a stiahnuť PDF</button>`;
+  J.initTheme(qs('#th'));
+  const re=()=>{ const y=scrollY; nova(); badge(); scrollTo(0,y); };
+  qs('#num').onchange=e=>{ inv.number=e.target.value; re(); }; qs('#num').oninput=e=>{ inv.number=e.target.value; };
+  const nn=qs('#nn'); if(nn) nn.onclick=()=>{ inv.number=sg.number; re(); };
+  qsa('[data-m]').forEach(b=> b.onclick=()=>{ J.setMonth(inv,+b.dataset.y,+b.dataset.m); re(); });
+  qs('#other').onclick=()=>{ const v=prompt('Napíš mesiac a rok, napr. 3 2026 (marec 2026):', `${(cur||sg).m+1} ${(cur||sg).y}`); const m=/(\d{1,2})\D+(\d{4})/.exec(v||''); if(m && +m[1]>=1 && +m[1]<=12){ J.setMonth(inv,+m[2],+m[1]-1); re(); } };
+  qs('#site').oninput=e=>{ inv.site=e.target.value; }; qs('#site').onchange=re;
+  qsa('[data-keep]').forEach(b=> b.onclick=()=>{ confirmed.add(b.dataset.keep); re(); });
+  qsa('.pr').forEach(x=>{ x.oninput=()=>{ inv.items[+x.dataset.i].price=Number(x.value)||0; }; x.onchange=re; });
+  const v=id=>Number(qs(id).value)||0, up=()=>{ const t=Math.round(v('#cd')*v('#ch')*v('#cr')*100)/100; qs('#cres').innerHTML=`${v('#cd')} dní × ${v('#ch')} h × ${v('#cr')} €/h = <b>${money(t)} €</b>`; return t; };
+  ['#cd','#ch','#cr'].forEach(id=>qs(id).oninput=up); up();
+  qs('#ca').onclick=()=>{ const t=up(); if(!t) return; J.saveCalcPrefs(v('#ch'),v('#cr')); inv.items[0].price=t; re(); };
+  qs('#pvbtn').onclick=()=>{ J.recalc(inv,base); const d=document.createElement('div'); d.className='pv'; J.sheet('Náhľad', d); J.mount(d, inv); };
+  qs('#mebtn').onclick=()=>setTab('me');
+  qs('#save').onclick=async()=>{
+    document.activeElement && document.activeElement.blur(); J.recalc(inv,base);
+    const miss=J.status(inv,base,confirmed).filter(x=>!x.ok);
+    if(miss.length && !confirm('Ešte nie je zmenené:\n\n• '+miss.map(m=>m.label).join('\n• ')+'\n\nNaozaj uložiť takto?')) return;
+    if(!J.save(inv)) return;
+    await J.pdf(inv); toast('✓ Faktúra '+inv.number+' uložená');
+    ({inv,base}=J.startNew()); confirmed=new Set(); setTab('list');
+  };
+}
+
+/* ---------- Moje údaje ---------- */
+function me(){
+  main.innerHTML = topbar(`<button type="button" id="th"></button>`) + `<h1>Moje údaje</h1>
+    <p class="sub" style="color:var(--muted);margin:0 4px 6px">Tieto údaje sa použijú na novej faktúre. Uložia sa spolu s ňou.</p>
+    <div class="group" style="padding:0 12px 16px" id="ff"></div>
+    <div class="sec-t">Aplikácia</div>
+    <div class="group"><a class="cell tap" href="index.html" style="color:inherit;text-decoration:none"><div class="grow">Súčasná (hlavná) aplikácia<div class="sub">zálohy, kôš, nastavenia</div></div><span class="chev">›</span></a></div>`;
+  qs('#ff').appendChild(J.fixedForm(inv, ()=>{ J.recalc(inv,base); badge(); }));
+  J.initTheme(qs('#th'));
+}
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3000); }
+setTab('new');
+})();
+</script>
+</body>
+</html>
