@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Faktúra – mesačný lístok</title>
+<style>
+  /* ===== Tokeny (svetlý / tmavý podľa systému – bez vlastného prepínača, dark-mode.md) =====
+     Kontrast (WCAG): text #1C1C1E na #F2F2F7 16,2:1 · sekundárny #545458 na #FFFFFF 7,5:1, na #F2F2F7 6,7:1
+     akcia #0A5FC7 na #FFFFFF 6,0:1 · signál „zmeniť“ #B42318 na #FFF1EF 6,1:1 · „hotovo“ #17663A na #EDF8F1 6,4:1 */
+  :root{ color-scheme:light dark;
+    --bg:#F2F2F7; --card:#FFFFFF; --card2:#F7F7FA; --label:#1C1C1E; --label2:#545458; --sep:#D8D8DD; --fill:#E9E9EE;
+    --tint:#0A5FC7; --tint-ink:#FFFFFF; --need:#B42318; --need-bg:#FFF1EF; --done:#17663A; --done-bg:#EDF8F1;
+    --tape-a:#F2C200; --tape-b:#1C1C1E; --scrim:rgba(0,0,0,.4); --bar:rgba(249,249,251,.94); }
+  @media (prefers-color-scheme: dark){ :root{
+    --bg:#000000; --card:#1C1C1E; --card2:#232326; --label:#F2F2F7; --label2:#AEAEB2; --sep:#38383A; --fill:#2C2C2E;
+    --tint:#4DA3FF; --tint-ink:#00172E; --need:#FF8A80; --need-bg:#3A1714; --done:#6FD49A; --done-bg:#10291B;
+    --tape-a:#E0B400; --tape-b:#000000; --scrim:rgba(0,0,0,.6); --bar:rgba(22,22,24,.94); } }
+
+  /* Dynamic Type: v Safari na iPhone sa písmo riadi nastavením veľkosti textu v systéme (typography.md) */
+  html{font-size:106.25%;}
+  @supports (font: -apple-system-body){ html{font:-apple-system-body;} }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--label); font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:1rem; line-height:1.35; -webkit-font-smoothing:antialiased;}
+  .num{font-variant-numeric:tabular-nums;}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
+  button,input,select{font:inherit; color:inherit;}
+  :focus-visible{outline:3px solid var(--tint); outline-offset:2px;}
+
+  main{max-width:640px; margin:0 auto; padding:calc(.5rem + env(safe-area-inset-top)) 1rem calc(6.5rem + env(safe-area-inset-bottom));}
+  .navrow{display:flex; align-items:center; min-height:44px;}
+  .navrow a{display:inline-flex; align-items:center; min-height:44px; padding:0 .25rem; color:var(--tint); text-decoration:none;}
+  h1{font-size:2rem; line-height:1.15; font-weight:700; letter-spacing:-.01em; margin:.25rem 0 .25rem;}
+  .lead{color:var(--label2); margin:0 0 1.25rem;}
+  .group-t{font-size:.8125rem; text-transform:uppercase; letter-spacing:.02em; color:var(--label2); margin:1.5rem 1rem .5rem;}
+
+  /* ===== Podpisový prvok: mesačný lístok ===== */
+  .ticket{background:var(--card); border-radius:16px; overflow:hidden; position:relative; box-shadow:0 1px 0 var(--sep);}
+  .ticket::before{content:""; display:block; height:6px; background:repeating-linear-gradient(-45deg,var(--tape-a) 0 10px,var(--tape-b) 10px 20px);}
+  .t-head{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:.5rem 1rem; padding:1rem 1rem .75rem;}
+  .t-head .sum{margin-left:auto;}
+  .t-head .k{font-size:.8125rem; color:var(--label2);}
+  .t-head .v{font-size:1.5rem; font-weight:700; white-space:nowrap;}
+  .t-head > div{min-width:0;}
+  .t-head .sum{text-align:right;}
+  .perf{height:0; border-top:2px dashed var(--sep); margin:0 1rem; position:relative;}
+  .perf::before,.perf::after{content:""; position:absolute; top:-9px; width:16px; height:16px; border-radius:50%; background:var(--bg);}
+  .perf::before{left:-1.5rem;} .perf::after{right:-1.5rem;}
+  .row{display:flex; align-items:center; gap:.75rem; width:100%; min-height:3.75rem; padding:.625rem 1rem; background:none; border:none; text-align:left; cursor:pointer; position:relative;}
+  .row + .row::before{content:""; position:absolute; top:0; left:1rem; right:0; border-top:1px solid var(--sep);}
+  .row:active{background:var(--fill);}
+  .row .txt{flex:1; min-width:0;}
+  .row .k{font-size:.8125rem; color:var(--label2);}
+  .row .v{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .row .s2{font-size:.8125rem; color:var(--label2);}
+  .pill{display:inline-flex; align-items:center; gap:.3rem; font-size:.875rem; font-weight:600; padding:.3rem .6rem; border-radius:999px; white-space:nowrap;}
+  .pill.need{color:var(--need); background:var(--need-bg);} .pill.done{color:var(--done); background:var(--done-bg);}
+  .pill svg{width:1em; height:1em;}
+  .chev{color:var(--label2); width:.75rem; height:.75rem; flex:0 0 auto;}
+
+  .primary{display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; min-height:3.25rem; margin-top:1.25rem; border:none; border-radius:14px; background:var(--tint); color:var(--tint-ink); font-weight:600; font-size:1.0625rem; cursor:pointer;}
+  .secondary{display:flex; align-items:center; justify-content:center; width:100%; min-height:2.75rem; margin-top:.5rem; border:none; background:none; color:var(--tint); cursor:pointer; font-size:1rem;}
+  .note{color:var(--label2); font-size:.875rem; margin:1rem .25rem 0; line-height:1.45;}
+  .note a{color:var(--tint);}
+
+  .list{background:var(--card); border-radius:12px; overflow:hidden;}
+  .list .row .amt{font-weight:600; white-space:nowrap;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:.75rem;}
+  .stats div{background:var(--card); border-radius:12px; padding:.875rem 1rem; min-width:0;} .stats .k{font-size:.8125rem; color:var(--label2);} .stats .v{font-size:1.25rem; font-weight:700; white-space:nowrap;}
+  .empty{text-align:center; color:var(--label2); padding:2.5rem 1rem;}
+
+  .done-card{background:var(--card); border-radius:16px; padding:1.75rem 1.25rem 1.25rem; text-align:center;}
+  .done-card .big{width:4rem; height:4rem; color:var(--done); margin:0 auto .5rem;}
+  .done-card h2{font-size:1.5rem; margin:.25rem 0;}
+  .done-card p{color:var(--label2); margin:.25rem 0 1rem;}
+  .btnrow{display:grid; grid-template-columns:1fr 1fr; gap:.5rem;}
+  .tbtn{min-height:2.75rem; border:none; border-radius:12px; background:var(--fill); color:var(--tint); font-weight:600; cursor:pointer; padding:.5rem;}
+  .tbtn.danger{color:var(--need);}
+
+  /* ===== Tab bar (tab-bars.md) ===== */
+  .tabbar{position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; justify-content:center; background:var(--bar); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border-top:1px solid var(--sep); padding-bottom:env(safe-area-inset-bottom);}
+  .tabbar button{flex:1; max-width:200px; min-height:3.25rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.15rem; border:none; background:none; color:var(--label2); font-size:.75rem; font-weight:500; cursor:pointer; position:relative;}
+  .tabbar svg{width:1.6rem; height:1.6rem;}
+  .tabbar button[aria-selected="true"]{color:var(--tint);}
+  .tabbar .badge{position:absolute; top:.3rem; left:calc(50% + .45rem); min-width:1.15rem; height:1.15rem; border-radius:999px; background:var(--need); color:#fff; font-size:.6875rem; font-weight:700; display:grid; place-items:center; padding:0 .3rem;}
+  .tabbar .badge[hidden]{display:none;}
+  @media (prefers-color-scheme: dark){ .tabbar .badge{color:#2B0B08;} }
+
+  /* ===== Sheet (sheets.md: jeden naraz, úchyt, Zrušiť + Hotovo, zatvorenie potiahnutím) ===== */
+  .scrim{position:fixed; inset:0; z-index:40; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center; animation:fade .2s ease-out;}
+  .sheet{width:100%; max-width:640px; max-height:94dvh; background:var(--card); border-radius:14px 14px 0 0; display:flex; flex-direction:column; animation:up .28s cubic-bezier(.2,.8,.2,1); padding-bottom:env(safe-area-inset-bottom);}
+  @media (min-width:700px){ .scrim{align-items:center;} .sheet{border-radius:14px; max-height:86dvh;} }
+  .grab{width:100%; height:20px; display:grid; place-items:center; cursor:grab; touch-action:none; border:none; background:none;}
+  .grab::before{content:""; width:36px; height:5px; border-radius:3px; background:var(--sep);}
+  .s-head{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 .5rem; touch-action:none;}
+  .s-head h2{font-size:1.0625rem; margin:0; font-weight:600; text-align:center;}
+  .s-head button{min-height:44px; min-width:44px; padding:0 .75rem; border:none; background:none; color:var(--tint); cursor:pointer; font-size:1.0625rem;}
+  .s-head .ok{font-weight:600; justify-self:end;} .s-head .cancel{justify-self:start;}
+  .s-body{overflow-y:auto; padding:.5rem 1.25rem 1.5rem;}
+  .q{font-size:1.625rem; font-weight:700; line-height:1.2; margin:.75rem 0 .375rem;}
+  .qsub{color:var(--label2); margin:0 0 1.25rem;}
+  .field{width:100%; min-height:3.5rem; padding:.75rem 1rem; border:1.5px solid var(--sep); border-radius:12px; background:var(--card2); font-size:1.5rem; font-weight:600; text-align:center;}
+  .field:focus{outline:none; border-color:var(--tint); box-shadow:0 0 0 3px color-mix(in srgb, var(--tint) 25%, transparent);}
+  .hint{margin-top:.625rem; color:var(--label2); text-align:center;}
+  .hint b{color:var(--label);}
+  .msg{margin-top:.75rem; padding:.75rem 1rem; border-radius:12px; display:flex; gap:.5rem; align-items:flex-start;}
+  .msg.need{color:var(--need); background:var(--need-bg);} .msg svg{flex:0 0 auto; width:1.25rem; height:1.25rem; margin-top:.1rem;}
+  .opt{display:flex; align-items:center; justify-content:center; gap:.4rem; width:100%; min-height:2.75rem; margin-top:.75rem; border:none; border-radius:12px; background:var(--fill); color:var(--tint); font-weight:600; cursor:pointer;}
+  .choices{background:var(--card2); border-radius:12px; overflow:hidden; margin-top:1rem;}
+  .choice{display:flex; align-items:center; gap:.75rem; width:100%; min-height:2.75rem; padding:.625rem 1rem; border:none; background:none; text-align:left; cursor:pointer; position:relative;}
+  .choice + .choice::before{content:""; position:absolute; top:0; left:1rem; right:0; border-top:1px solid var(--sep);}
+  .choice span{flex:1;} .choice svg{width:1.1rem; height:1.1rem; color:var(--tint); visibility:hidden;} .choice[aria-checked="true"] svg{visibility:visible;}
+  .stepper{display:flex; align-items:center; justify-content:center; gap:1.25rem; margin-bottom:1rem;}
+  .stepper button{width:44px; height:44px; border-radius:50%; border:none; background:var(--fill); color:var(--tint); font-size:1.25rem; cursor:pointer;}
+  .stepper b{font-size:1.25rem; min-width:4ch; text-align:center;}
+  .months{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem;}
+  .months button{min-height:3rem; border-radius:12px; border:1.5px solid var(--sep); background:var(--card2); cursor:pointer; font-size:1rem;}
+  .months button[aria-pressed="true"]{background:var(--tint); border-color:var(--tint); color:var(--tint-ink); font-weight:700;}
+  .dates{margin-top:1rem; background:var(--card2); border-radius:12px; padding:.75rem 1rem; display:grid; grid-template-columns:auto 1fr; gap:.35rem 1rem; font-size:.9375rem;}
+  .dates span{color:var(--label2);} .dates b{text-align:right;}
+  .seg{display:grid; grid-auto-flow:column; grid-auto-columns:1fr; background:var(--fill); border-radius:10px; padding:2px; gap:2px;}
+  .seg button{min-height:2.5rem; border:none; border-radius:8px; background:none; cursor:pointer; font-weight:600;}
+  .seg button[aria-pressed="true"]{background:var(--card); box-shadow:0 1px 3px rgba(0,0,0,.15);}
+  .calc{margin-top:1.5rem; border-top:1px solid var(--sep); padding-top:1rem;}
+  .calc h3{font-size:1.0625rem; margin:0 0 .75rem;}
+  .calc .lbl{font-size:.8125rem; color:var(--label2); margin:.75rem 0 .375rem;}
+  .calc .res{margin-top:1rem; text-align:center;} .calc .res b{font-size:1.375rem;}
+  .rate{display:flex; align-items:center; gap:.5rem; white-space:nowrap;} .rate input{flex:1; min-width:0; min-height:2.75rem; padding:.5rem .75rem; border:1.5px solid var(--sep); border-radius:10px; background:var(--card2); font-size:1.125rem; text-align:right;}
+  .pv{background:#fff; border-radius:8px; overflow:hidden; border:1px solid var(--sep);}
+
+  /* Upozornenie s „Vrátiť“ namiesto vyskakovacieho okna (alerts.md, feedback.md) */
+  .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(4.5rem + env(safe-area-inset-bottom)); z-index:30; display:flex; align-items:center; gap:.75rem; background:var(--label); color:var(--bg); border-radius:14px; padding:.375rem .375rem .375rem 1rem; width:min(30rem, calc(100% - 2rem)); box-shadow:0 8px 24px rgba(0,0,0,.25);}
+  .toast span{flex:1;}
+  .toast button{min-height:44px; padding:0 .875rem; border:none; border-radius:10px; background:transparent; color:inherit; font-weight:700; cursor:pointer; text-decoration:underline;}
+
+  @keyframes up{from{transform:translateY(100%);} to{transform:none;}}
+  @keyframes fade{from{opacity:0;} to{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important; scroll-behavior:auto !important;} }
+</style>
+</head>
+<body>
+<main id="view" aria-live="off"></main>
+<nav class="tabbar" role="tablist" aria-label="Sekcie">
+  <button type="button" role="tab" data-tab="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>Nová<span class="badge" id="badge" hidden></span></button>
+  <button type="button" role="tab" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>Faktúry</button>
+  <button type="button" role="tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Údaje</button>
+</nav>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script src="lib/qrcode.min.js"></script>
+<script src="lib/html2canvas.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="jadro.js"></script>
+<script>
+(function(){
+// táto verzia sa riadi vzhľadom telefónu – zruš prípadnú ručnú voľbu z iných verzií len pre túto stránku
+document.documentElement.removeAttribute('data-theme');
+const {qs, qsa, esc, money, fmtDate} = J;
+const IC={
+  need:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>',
+  done:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>',
+  chev:'<svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1 6 6-6 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  big:'<svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>',
+};
+let tab='new', {inv, base} = J.startNew(), confirmed=new Set(), saved=null;
+const view=qs('#view');
+const live=(t)=>{ qs('#live').textContent=''; setTimeout(()=>qs('#live').textContent=t, 30); };
+const status=()=> J.status(inv,base,confirmed);
+const firm=()=> (inv.buyer.party||'').split('\n')[0];
+
+function setTab(t){ tab=t; qsa('.tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab===t))); render(); window.scrollTo({top:0}); }
+qsa('.tabbar [role=tab]').forEach(b=> b.onclick=()=>setTab(b.dataset.tab));
+function render(){ J.recalc(inv,base); ({new:renderNew, list:renderList, me:renderMe})[tab](); badge(); }
+function badge(){ const n=status().filter(s=>!s.ok).length, b=qs('#badge'); b.hidden=!n || !!saved; b.textContent=n; qs('[data-tab="new"]').setAttribute('aria-label', n&&!saved? `Nová, ${n} na zmenu` : 'Nová'); }
+const back=`<div class="navrow"><a href="dizajny.html">‹ Návrhy</a></div>`;
+
+/* ===================== NOVÁ ===================== */
+function renderNew(){
+  if(saved) return renderSaved();
+  const st=status(), ok=Object.fromEntries(st.map(s=>[s.key,s.ok])), left=st.filter(s=>!s.ok);
+  const mo=J.monthOf(inv), mlabel=mo? J.monthLabel(mo.y,mo.m) : '–';
+  const pill=(k)=> ok[k]? `<span class="pill done">${IC.done}Hotovo</span>` : `<span class="pill need">${IC.need}Zmeniť</span>`;
+  const row=(k,label,value,sub='')=>`<button type="button" class="row" data-edit="${k}" aria-label="${label}: ${esc(value)} ${esc(sub)}. ${ok[k]?'Hotovo':'Treba zmeniť'}"><div class="txt"><div class="k">${label}</div><div class="v">${esc(value)}</div>${sub? `<div class="s2">${esc(sub)}</div>`:''}</div>${pill(k)}${IC.chev}</button>`;
+  view.innerHTML = back + `<h1>${mo? 'Faktúra za '+esc(J.MONTHS[mo.m]) : 'Nová faktúra'}</h1>
+    <p class="lead">${firm()? 'Pre '+esc(firm()) : 'Vyplň údaje v časti Údaje'}${base? ' · podľa faktúry '+esc(base.number) : ''}</p>
+    <section class="ticket" aria-label="Mesačný lístok">
+      <div class="t-head"><div><div class="k">Číslo faktúry</div><div class="v num">${esc(inv.number)||'–'}</div></div><div class="sum"><div class="k">Spolu</div><div class="v num">${money(inv.sums.total)} €</div></div></div>
+      <div class="perf" aria-hidden="true"></div>
+      ${row('number','Číslo faktúry', inv.number||'–')}
+      ${row('month','Mesiac', mlabel, inv.period_from? 'splatné '+fmtDate(inv.due) : '')}
+      ${row('site','Stavba', inv.site||'–')}
+      ${row('price','Suma', money(inv.sums.total)+' €')}
+    </section>
+    ${left.length? `<button type="button" class="primary" id="go">Pokračovať · ${left[0].label.toLowerCase()}<span class="sr"> (zostáva ${left.length})</span></button>
+       <button type="button" class="secondary" id="saveanyway">Uložiť bez ďalších zmien</button>`
+     : `<button type="button" class="primary" id="save">Uložiť a stiahnuť PDF</button>`}
+    <button type="button" class="secondary" id="pv">Zobraziť faktúru</button>
+    <p class="note">Firma, IBAN, texty a pečiatka sú rovnaké ako minule. Zmeniť ich môžeš v časti <a href="#" id="tome">Údaje</a>.</p>`;
+  qsa('[data-edit]').forEach(b=> b.onclick=()=>edit(b.dataset.edit, false));
+  const go=qs('#go'); if(go) go.onclick=()=>edit(left[0].key, true);
+  const sv=qs('#save'); if(sv) sv.onclick=save;
+  const sa=qs('#saveanyway'); if(sa) sa.onclick=save;
+  qs('#pv').onclick=preview;
+  qs('#tome').onclick=(e)=>{ e.preventDefault(); setTab('me'); };
+}
+
+/* ---------- jedna otázka v okne ---------- */
+let sheetOpen=false;
+function sheet(title, build, onDone, {okLabel}={}){
+  if(sheetOpen) return; sheetOpen=true;
+  const snap=JSON.stringify(inv), snapC=[...confirmed];
+  const scrim=document.createElement('div'); scrim.className='scrim';
+  scrim.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <button type="button" class="grab" aria-label="Zavrieť (potiahni nadol)"></button>
+    <div class="s-head"><button type="button" class="cancel">Zrušiť</button><h2>${esc(title)}</h2><button type="button" class="ok">Hotovo</button></div>
+    <div class="s-body"></div></div>`;
+  const sh=scrim.firstElementChild, body=sh.querySelector('.s-body'), okb=sh.querySelector('.ok');
+  const close=(commit)=>{ if(!commit){ inv=JSON.parse(snap); confirmed=new Set(snapC); } scrim.remove(); sheetOpen=false; document.removeEventListener('keydown',key); render(); if(commit) onDone && onDone(); else live('Zrušené'); };
+  const key=(e)=>{ if(e.key==='Escape') close(false); };
+  sh.querySelector('.cancel').onclick=()=>close(false);
+  okb.onclick=()=>close(true);
+  scrim.addEventListener('click',e=>{ if(e.target===scrim) close(false); });
+  document.addEventListener('keydown',key);
+  // potiahnutie nadol zatvorí (Zrušiť)
+  let y0=null; const drag=[sh.querySelector('.grab'), sh.querySelector('.s-head')];
+  drag.forEach(d=>{ d.addEventListener('pointerdown',e=>{ if(e.target.closest('.s-head button')) return; y0=e.clientY; sh.style.transition='none'; d.setPointerCapture(e.pointerId); });
+    d.addEventListener('pointermove',e=>{ if(y0==null) return; const dy=Math.max(0,e.clientY-y0); sh.style.transform=`translateY(${dy}px)`; });
+    d.addEventListener('pointerup',e=>{ if(y0==null) return; const dy=e.clientY-y0; y0=null; sh.style.transition='transform .2s'; if(dy>110) close(false); else sh.style.transform=''; }); });
+  sh.querySelector('.grab').onclick=()=>{};    // úchyt je na ťahanie, nie na klik
+  document.body.appendChild(scrim);
+  const api={ body, setOk:(t, enabled=true)=>{ okb.textContent=t; okb.disabled=!enabled; okb.style.opacity=enabled?1:.4; } };
+  build(api);
+  const f=body.querySelector('input'); if(f && !matchMedia('(pointer:coarse)').matches) setTimeout(()=>f.focus(),60);
+}
+function nextAfter(guided){ return ()=>{ if(!guided) return; const n=status().find(s=>!s.ok); if(n) setTimeout(()=>edit(n.key,true),180); else live('Všetko je hotové. Môžeš uložiť.'); }; }
+
+function edit(k, guided){
+  const sg=J.suggest(base);
+  if(k==='number') sheet('Číslo faktúry', (s)=>{
+    const upd=()=>{ const v=J.norm(inv.number), same=base&&v===J.norm(base.number), dup=!same && J.load().some(r=>J.norm(r.number)===v);
+      s.body.querySelector('#nmsg').innerHTML = !v? `<div class="msg need">${IC.need}<span>Zadaj číslo faktúry.</span></div>`
+        : same? `<div class="msg need">${IC.need}<span>To je číslo minulej faktúry. Každá faktúra potrebuje nové číslo${sg.number? ' – napríklad '+esc(sg.number):''}.</span></div>`
+        : dup? `<div class="msg need">${IC.need}<span>Faktúra ${esc(v)} už existuje. Pri uložení ju nahradí táto (stará pôjde do koša).</span></div>` : '';
+      s.setOk('Hotovo', !!v && !same); };
+    s.body.innerHTML=`<p class="q">Aké bude číslo faktúry?</p><p class="qsub">Navrhol som ďalšie číslo v poradí.</p>
+      <input class="field num" id="f" value="${esc(inv.number)}" autocomplete="off" aria-label="Číslo faktúry">
+      ${base? `<p class="hint">Minule: <b>${esc(base.number)}</b></p>`:''}
+      ${sg.number && inv.number!==sg.number? `<button type="button" class="opt" id="sg">Použiť ${esc(sg.number)}</button>`:''}
+      <div id="nmsg" aria-live="polite"></div>`;
+    s.body.querySelector('#f').oninput=e=>{ inv.number=e.target.value; upd(); };
+    const b=s.body.querySelector('#sg'); if(b) b.onclick=()=>{ inv.number=sg.number; s.body.querySelector('#f').value=sg.number; b.remove(); upd(); };
+    upd();
+  }, ()=>{ confirmed.add('number'); nextAfter(guided)(); });
+
+  if(k==='month') sheet('Mesiac', (s)=>{
+    let y=(J.monthOf(inv)||sg).y;
+    const draw=()=>{ const cur=J.monthOf(inv);
+      s.body.innerHTML=`<p class="q">Za ktorý mesiac?</p><p class="qsub">Dátumy sa nastavia samé. Navrhujem ${esc(J.MONTHS[sg.m])} ${sg.y}.</p>
+        <div class="stepper"><button type="button" data-y="-1" aria-label="Predchádzajúci rok">‹</button><b class="num" aria-live="polite">${y}</b><button type="button" data-y="1" aria-label="Nasledujúci rok">›</button></div>
+        <div class="months">${J.MONTHS_CAP.map((m,i)=>`<button type="button" data-m="${i}" aria-pressed="${!!(cur&&cur.y===y&&cur.m===i)}">${m}</button>`).join('')}</div>
+        ${inv.period_from? `<div class="dates num"><span>Obdobie</span><b>${fmtDate(inv.period_from)} – ${fmtDate(inv.period_to)}</b><span>Vystavená a dodanie</span><b>${fmtDate(inv.issue)}</b><span>Splatnosť</span><b>${fmtDate(inv.due)}</b></div>`:''}`;
+      s.setOk(base && inv.period_from===base.period_from? 'Ponechať':'Hotovo');
+      s.body.querySelectorAll('[data-y]').forEach(b=> b.onclick=()=>{ y+=+b.dataset.y; draw(); });
+      s.body.querySelectorAll('[data-m]').forEach(b=> b.onclick=()=>{ J.setMonth(inv,y,+b.dataset.m); draw(); live(J.monthLabel(y,+b.dataset.m)+' nastavený'); });
+    };
+    if(!J.monthOf(inv) || (base && inv.period_from===base.period_from && guided)){ /* nič nemeníme bez ťuknutia */ }
+    draw();
+  }, ()=>{ confirmed.add('month'); nextAfter(guided)(); });
+
+  if(k==='site') sheet('Stavba', (s)=>{
+    const recent=[...new Set([J.norm(inv.site), ...J.sorted().map(r=>J.norm(r.site))].filter(Boolean))].slice(0,5);
+    const draw=()=>{ s.body.querySelectorAll('.choice').forEach(c=>c.setAttribute('aria-checked', String(c.dataset.s===J.norm(inv.site)))); s.setOk(base && J.norm(inv.site)===J.norm(base.site)? 'Ponechať':'Hotovo', !!J.norm(inv.site)); };
+    s.body.innerHTML=`<p class="q">Na akej stavbe?</p><p class="qsub">Vyber zo zoznamu alebo napíš novú.</p>
+      ${recent.length? `<div class="choices" role="radiogroup" aria-label="Posledné stavby">${recent.map(x=>`<button type="button" class="choice" role="radio" data-s="${esc(x)}"><span>${esc(x)}</span>${IC.check}</button>`).join('')}</div>`:''}
+      <p class="hint" style="text-align:left;margin:1.25rem 0 .5rem">Iná stavba</p>
+      <input class="field" id="f" style="font-size:1.125rem;text-align:left" value="${recent.includes(J.norm(inv.site))? '' : esc(inv.site)}" placeholder="Názov stavby" autocomplete="off" aria-label="Iná stavba">`;
+    s.body.querySelectorAll('.choice').forEach(c=> c.onclick=()=>{ inv.site=c.dataset.s; s.body.querySelector('#f').value=''; draw(); });
+    s.body.querySelector('#f').oninput=e=>{ inv.site=e.target.value; draw(); };
+    draw();
+  }, ()=>{ confirmed.add('site'); nextAfter(guided)(); });
+
+  if(k==='price') sheet('Suma', (s)=>{
+    const p=J.calcPrefs(), mo=J.monthOf(inv)||sg; let days=J.workdays(mo.y,mo.m), hpd=Number(p.hpd)||8;
+    const prev=base? base.items.reduce((a,it)=>a+it.price,0) : 0;
+    s.body.innerHTML=`<p class="q">Koľko fakturuješ?</p><p class="qsub">Suma v eurách, bez DPH.</p>
+      ${inv.items.map((it,i)=>`${inv.items.length>1? `<p class="hint" style="text-align:left">${esc(it.name||'Položka '+(i+1))}</p>`:''}<input class="field num pr" data-i="${i}" type="number" step="0.01" min="0" inputmode="decimal" value="${it.price||''}" placeholder="0,00" aria-label="Suma ${i+1} v eurách">`).join('')}
+      ${prev? `<p class="hint">Minule: <b class="num">${money(prev)} €</b></p>`:''}
+      <div class="calc"><h3>Vypočítať z hodín</h3>
+        <div class="lbl">Odpracované dni (v mesiaci ${esc(J.MONTHS[mo.m])} je ${J.workdays(mo.y,mo.m)} pracovných dní)</div>
+        <div class="stepper" style="justify-content:flex-start"><button type="button" data-d="-1" aria-label="O deň menej">−</button><b class="num" id="days" aria-live="polite">${days}</b><button type="button" data-d="1" aria-label="O deň viac">+</button></div>
+        <div class="lbl">Hodín denne</div>
+        <div class="seg" role="group" aria-label="Hodín denne">${[8,9,10,11].map(h=>`<button type="button" data-h="${h}" aria-pressed="${h===hpd}">${h} h</button>`).join('')}</div>
+        <div class="lbl">Hodinová sadzba</div>
+        <div class="rate"><input id="rate" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(p.rate)}" placeholder="napr. 15" aria-label="Hodinová sadzba v eurách"><span>€ / h</span></div>
+        <div class="res num" id="res" aria-live="polite"></div>
+        <button type="button" class="opt" id="use">Použiť ako sumu</button></div>`;
+    const upd=()=>{ J.recalc(inv,base); const same=base&&inv.items.every((it,i)=>base.items[i]&&Number(it.price)===Number(base.items[i].price)); s.setOk(same? 'Ponechať':'Hotovo', inv.sums.total>0); };
+    const calc=()=>{ const r=Number(s.body.querySelector('#rate').value)||0, t=Math.round(days*hpd*r*100)/100; s.body.querySelector('#res').innerHTML=`${days} dní × ${hpd} h × ${r} € = <b>${money(t)} €</b>`; return t; };
+    s.body.querySelectorAll('.pr').forEach(x=> x.oninput=()=>{ inv.items[+x.dataset.i].price=Number(x.value)||0; upd(); });
+    s.body.querySelectorAll('[data-d]').forEach(b=> b.onclick=()=>{ days=Math.max(0,Math.min(31,days+ +b.dataset.d)); s.body.querySelector('#days').textContent=days; calc(); });
+    s.body.querySelectorAll('[data-h]').forEach(b=> b.onclick=()=>{ hpd=+b.dataset.h; s.body.querySelectorAll('[data-h]').forEach(x=>x.setAttribute('aria-pressed', String(x===b))); calc(); });
+    s.body.querySelector('#rate').oninput=calc;
+    s.body.querySelector('#use').onclick=()=>{ const t=calc(); if(!(t>0)){ s.body.querySelector('#rate').focus(); return; } J.saveCalcPrefs(hpd, Number(s.body.querySelector('#rate').value)); inv.items[0].price=t; s.body.querySelector('.pr').value=t; upd(); live('Suma '+money(t)+' eur'); };
+    calc(); upd();
+  }, ()=>{ confirmed.add('price'); nextAfter(guided)(); });
+}
+
+/* ---------- uloženie bez vyskakovacích okien ---------- */
+async function save(){
+  J.recalc(inv,base);
+  const exists=J.load().some(r=>J.norm(r.number)===J.norm(inv.number));
+  // číslo, ktoré už existuje, sa uloží len vtedy, keď ho človek v okne Číslo faktúry vedome potvrdil (tam vidí upozornenie)
+  if(exists && (!confirmed.has('number') || (base && J.norm(inv.number)===J.norm(base.number)))) return edit('number', false);
+  if(!J.save(inv,{force:exists})) return;
+  saved=JSON.parse(JSON.stringify(inv)); render(); live('Faktúra '+saved.number+' je uložená');
+  try{ await J.pdf(saved); }catch(e){}
+}
+function renderSaved(){
+  view.innerHTML = back + `<h1>Hotovo</h1><div class="done-card">${IC.big}
+    <h2>Faktúra ${esc(saved.number)} je uložená</h2><p>PDF sa stiahlo do telefónu. Suma <b class="num">${money(saved.sums.total)} €</b>.</p>
+    <div class="btnrow"><button type="button" class="tbtn" id="again">Stiahnuť znova</button><button type="button" class="tbtn" id="pr">Vytlačiť</button></div>
+    <button type="button" class="primary" id="next">Nová faktúra</button>
+    <button type="button" class="secondary" id="undo" style="color:var(--need)">Vrátiť uloženie</button></div>`;
+  qs('#again').onclick=()=>J.pdf(saved); qs('#pr').onclick=()=>J.print(saved);
+  qs('#next').onclick=()=>{ saved=null; ({inv,base}=J.startNew()); confirmed=new Set(); render(); };
+  qs('#undo').onclick=()=>{ J.remove(saved.id); inv=saved; delete inv.id; saved=null; render(); toast('Uloženie vrátené – faktúra je znova rozpracovaná.'); };
+}
+
+/* ===================== FAKTÚRY ===================== */
+function renderList(){
+  const all=J.sorted(), y=new Date().getFullYear(), yr=all.filter(r=>(r.issue||'').startsWith(String(y)));
+  const by={}; all.forEach(r=>{ const k=(r.issue||'').slice(0,4)||'Bez dátumu'; (by[k]=by[k]||[]).push(r); });
+  view.innerHTML = back + `<h1>Faktúry</h1>
+    <div class="stats"><div><div class="k">Spolu ${y}</div><div class="v num">${money(yr.reduce((s,r)=>s+(r.sums?.total||0),0))} €</div></div><div><div class="k">Počet ${y}</div><div class="v num">${yr.length}</div></div></div>
+    ${all.length? Object.keys(by).sort().reverse().map(k=>`<h2 class="group-t">${esc(k)}</h2><div class="list">${by[k].map(r=>{ const m=J.monthOf(r);
+      return `<button type="button" class="row" data-id="${r.id}"><div class="txt"><div class="v num">${esc(r.number)}</div><div class="k">${m? esc(J.monthLabel(m.y,m.m)) : esc(fmtDate(r.issue))}${r.site? ' · '+esc(r.site):''}</div></div><span class="amt num">${money(r.sums?.total)} €</span>${IC.chev}</button>`; }).join('')}</div>`).join('')
+      : `<p class="empty">Zatiaľ žiadne faktúry. Prvú vytvoríš v časti Nová.</p>`}`;
+  qsa('[data-id]').forEach(b=> b.onclick=()=>detail(all.find(r=>r.id===+b.dataset.id)));
+}
+function detail(r){
+  const n=J.recalc(J.normalize(r));
+  sheet('Faktúra '+r.number, (s)=>{
+    s.setOk('Zavrieť');
+    s.body.innerHTML=`<div class="pv" id="dpv"></div><div class="btnrow" style="margin-top:1rem"><button type="button" class="tbtn" data-a="pdf">Stiahnuť PDF</button><button type="button" class="tbtn" data-a="print">Vytlačiť</button><button type="button" class="tbtn" data-a="tpl">Použiť ako vzor</button><button type="button" class="tbtn danger" data-a="del">Zmazať</button></div>`;
+    J.mount(s.body.querySelector('#dpv'), n);
+    s.body.querySelector('.btnrow').onclick=(e)=>{ const a=e.target.dataset.a; if(!a) return;
+      if(a==='pdf') J.pdf(n); if(a==='print') J.print(n);
+      if(a==='tpl'){ base=J.normalize(r); delete base.id; inv=J.normalize(r); delete inv.id; confirmed=new Set(); saved=null; s.body.closest('.scrim').querySelector('.ok').click(); setTab('new'); }
+      if(a==='del'){ J.remove(r.id); s.body.closest('.scrim').querySelector('.ok').click(); toast('Faktúra '+r.number+' je v koši.', 'Vrátiť', ()=>{ const list=J.load(); list.push(r); J.saveAll(list); render(); }); } };
+  });
+}
+
+/* ===================== ÚDAJE ===================== */
+function renderMe(){
+  view.innerHTML = back + `<h1>Údaje</h1><p class="lead">Použijú sa na novej faktúre a uložia sa spolu s ňou.</p>
+    <div class="list" style="padding:0 1rem 1.25rem" id="ff"></div>
+    <p class="note">Svetlý alebo tmavý vzhľad sa riadi nastavením telefónu. Zálohy a kôš nájdeš v <a href="index.html">súčasnej aplikácii</a>.</p>`;
+  qs('#ff').appendChild(J.fixedForm(inv, ()=>{ J.recalc(inv,base); badge(); }));
+}
+
+/* ---------- pomocné ---------- */
+function preview(){ J.recalc(inv,base); sheet('Faktúra', (s)=>{ s.setOk('Zavrieť'); s.body.innerHTML='<div class="pv" id="ppv"></div>'; J.mount(s.body.querySelector('#ppv'), inv); }); }
+function toast(text, action, fn){
+  qsa('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status');
+  t.innerHTML=`<span>${esc(text)}</span>${action? `<button type="button">${esc(action)}</button>`:''}<button type="button" aria-label="Zavrieť upozornenie">✕</button>`;
+  const bs=t.querySelectorAll('button'); if(action) bs[0].onclick=()=>{ fn(); t.remove(); }; bs[bs.length-1].onclick=()=>t.remove();
+  document.body.appendChild(t);          // zostane, kým ho človek nezavrie (accessibility.md › Cognitive: bez časovača)
+}
+setTab('new');
+})();
+</script>
+</body>
+</html>
