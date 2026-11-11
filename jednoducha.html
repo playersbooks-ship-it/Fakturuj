@@ -92,7 +92,46 @@
   #view_items th + th, #view_items td + td { border-left:1px dashed var(--line); }
   #view_items th, #view_items td { padding-left:8px; padding-right:8px; }
 
+  /* ===== Mobil ===== */
+  input[type=date]{min-height:52px; -webkit-appearance:none; appearance:none;}
+  .mbar, #btn-close-prev, #btn-zoom-prev{display:none;}
+  @media (max-width: 1000px){
+    .wrap{padding:8px 8px 110px; gap:12px;}
+    #preview{display:none;}
+    body.show-prev{overflow:hidden;}
+    body.show-prev #preview{display:block; position:fixed; inset:0; z-index:50; border:none; border-radius:0; overflow:auto; background:#e5e7eb;}
+    body.show-prev #preview > .head{position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    body.show-prev #btn-close-prev{display:inline-block;}
+    body.show-prev #prev_box{padding:8px 8px 130px; box-sizing:border-box; overflow:auto;}
+    body.show-prev #btn-zoom-prev{display:inline-block;}
+    #preview > .head .btn{white-space:nowrap; padding:6px 10px;}
+    body.exporting #preview{display:block; position:absolute; left:-10000px; top:0; width:820px;}
+    .mbar{display:flex; flex-direction:column; gap:6px; position:fixed; left:0; right:0; bottom:0; z-index:60;
+          padding:8px 10px calc(10px + env(safe-area-inset-bottom)); background:#fff; border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.08);}
+    .mbar .row{display:flex; gap:8px;}
+    .mbar .btn{flex:1; padding:14px 8px; font-weight:700; font-size:18px;}
+    .mbar .btn.primary{flex:1.6;}
+    .mbar-st{font-size:15px; font-weight:700; text-align:center;}
+    .mbar-st.need{color:var(--red);} .mbar-st.done{color:var(--green);}
+  }
+  @media (max-width: 600px){
+    .panel{padding:14px 12px; border-radius:14px; font-size:17px;}
+    .panel h2{font-size:21px;}
+    .steps{font-size:16px; padding-left:20px;}
+    .status{font-size:18px; padding:12px;}
+    .status small{font-size:15px;}
+    .acts .btn{flex:1 1 auto;}
+    .end-acts{display:grid !important; grid-template-columns:1fr 1fr;}
+    .end-acts .btn:last-child{grid-column:1 / -1;}
+    .item{padding:10px 8px;}
+    details.box > .inner{padding:4px 10px 14px;}
+    .arch-row .btn{flex:1 1 auto;}
+    #btn-save-pdf{display:none;}           /* na mobile je v spodnej lište */
+  }
+
   @media print{
+    #preview{display:block !important; position:static !important;}
+    .mbar{display:none !important;}
     @page{ size:A4; margin:0 }
     body{ margin:0; background:#fff; }
     .wrap{ display:block; padding:0; }
@@ -136,7 +175,7 @@
           Odporúčam stiahnuť si zálohu faktúr (raz za mesiac), aby sa nestratili, ak by sa niečo stalo s mobilom/počítačom.
           <div style="margin-top:8px"><button type="button" class="btn small" data-act="backup">⬇️ Stiahnuť zálohu teraz</button></div>
         </div>
-        <div class="acts" style="margin-top:10px">
+        <div class="acts end-acts" style="margin-top:10px">
           <button type="button" class="btn" id="btn-save-only">💾 Len uložiť</button>
           <button type="button" class="btn" id="btn-print">🖨️ Vytlačiť</button>
           <button type="button" class="btn" id="btn-new">↺ Začať odznova (podľa poslednej)</button>
@@ -322,7 +361,7 @@
 
   <!-- ================= A4 NÁHĽAD ================= -->
   <div id="preview">
-    <div class="head">Náhľad faktúry</div>
+    <div class="head"><span>Náhľad faktúry</span><span style="display:flex;gap:6px"><button type="button" class="btn small" id="btn-zoom-prev">🔍 Zväčšiť</button><button type="button" class="btn small" id="btn-close-prev">✕ Zavrieť</button></span></div>
     <div id="prev_box">
       <div id="invoice">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
@@ -405,6 +444,15 @@
     </div>
   </div>
 
+</div>
+
+<!-- Spodná lišta (len na mobile) -->
+<div class="mbar">
+  <div class="mbar-st need" id="mbar_st"></div>
+  <div class="row">
+    <button type="button" class="btn" id="btn-open-prev">👁 Náhľad</button>
+    <button type="button" class="btn primary" id="btn-mbar-save">💾 Uložiť a PDF</button>
+  </div>
 </div>
 
 <!-- Export libs (CDN) -->
@@ -649,6 +697,9 @@
       st.className='status done';
       st.innerHTML='✓ Všetko je hotové<small>Skontroluj náhľad a stlač „Uložiť a stiahnuť PDF“.</small>';
     }
+    const mb=qs('#mbar_st');
+    mb.className='mbar-st '+(missing.length?'need':'done');
+    mb.textContent= missing.length ? '✏️ Zostáva zmeniť: '+missing.length : '✓ Všetko hotové';
     return missing;
   }
 
@@ -740,6 +791,7 @@
   // prispôsobenie A4 náhľadu šírke obrazovky
   function fitPreview(){
     const inv=qs('#invoice'); inv.style.zoom='';
+    if(document.body.classList.contains('exporting') || prevZoomed) return;
     const w=qs('#prev_box').clientWidth, full=inv.offsetWidth;
     if(full>0 && w>0 && w<full) inv.style.zoom=(w/full).toFixed(4);
   }
@@ -841,6 +893,14 @@
   }
   qs('#btn-save-pdf').onclick=async ()=>{ if(doSave()){ await exportPDF(); } };
   qs('#btn-save-only').onclick=()=>{ doSave(); };
+  qs('#btn-mbar-save').onclick=()=>qs('#btn-save-pdf').onclick();
+  let prevZoomed=false;
+  qs('#btn-zoom-prev').onclick=()=>{ prevZoomed=!prevZoomed; qs('#btn-zoom-prev').textContent=prevZoomed?'🔍 Zmenšiť':'🔍 Zväčšiť'; if(prevZoomed) fitReset(); else fitPreview(); };
+  function openPrev(){ document.body.classList.add('show-prev'); fitPreview(); qs('#preview').scrollTop=0; }
+  function closePrev(){ document.body.classList.remove('show-prev'); if(prevZoomed) qs('#btn-zoom-prev').onclick(); }
+  qs('#btn-open-prev').onclick=openPrev;
+  qs('#btn-close-prev').onclick=closePrev;
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePrev(); });
 
   // pečiatka
   function applyStamp(){ const s=lsGet(STAMP_KEY); const img=qs('#o_stamp'); if(s){ img.src=s; img.style.display=''; } else { img.removeAttribute('src'); img.style.display='none'; } }
@@ -923,6 +983,7 @@
     let tries=0; while(!ready() && tries++<80){ await new Promise(r=>setTimeout(r,100)); }
     setTitle(); fitReset();
     if(!ready()){ window.print(); fitPreview(); return; }
+    document.body.classList.add('exporting'); fitReset();
     try{
       const node=qs('#invoice');
       const scale=Math.min(3, Math.max(2, devicePixelRatio||2));
@@ -937,7 +998,7 @@
         y+=h; page++;
       }
       pdf.save(fileName()+'.pdf');
-    } finally { fitPreview(); }
+    } finally { document.body.classList.remove('exporting'); fitPreview(); }
   }
 
   // ---------- štart ----------
