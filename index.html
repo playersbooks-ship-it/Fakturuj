@@ -214,6 +214,71 @@
     #preview > .head{ display:none }
     #invoice{ zoom:1 !important; width:210mm; min-height:297mm; padding:12mm; }
   }
+
+  /* ================= SPRIEVODCA (dizajn 1) ================= */
+  :root{ --brand:#4f46e5; --brand-bg:#eef0ff; --brand-bg2:#e2e5ff; --on-brand:#ffffff; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --brand:#8b84ff; --brand-bg:#1f2350; --brand-bg2:#272c63; --on-brand:#0d1020; } }
+  :root[data-theme="dark"]{ --brand:#8b84ff; --brand-bg:#1f2350; --brand-bg2:#272c63; --on-brand:#0d1020; }
+  body.wz .btn.primary{color:var(--on-brand);}
+  body.wz .btn.primary.mp-btn.applied{color:var(--green);}
+  [data-wzoff]{display:none !important;}
+  .wz-top,.wz-start,.wz-q,.wz-check,.wz-fixed,#wz-back,#wz-next,#wz-again{display:none;}
+  body.wz .wz-top{display:flex;} body.wz .wz-start{display:block;} body.wz .wz-q{display:block;} body.wz .wz-check{display:block;} body.wz .wz-fixed{display:block;}
+  body.wz #wz-back,body.wz #wz-next,body.wz #wz-again{display:block;}
+  body.wz [hidden]{display:none !important;}
+  body.wz .top-load,body.wz .intro{display:none;}
+  .wz-top{align-items:center; gap:10px; margin:-6px 0 4px;}
+  .wz-home{font-size:22px; background:none; border:none; cursor:pointer; min-width:44px; min-height:44px; border-radius:12px;}
+  .wz-prog{flex:1; height:10px; border-radius:99px; background:var(--line); overflow:hidden;}
+  .wz-prog i{display:block; height:100%; width:0; background:var(--brand); border-radius:99px; transition:width .35s;}
+  .wz-no{font-size:15px; color:var(--muted); min-width:40px; text-align:right;}
+  body.wz .theme-btn{float:none; margin:0; min-height:44px;}
+  .wz-q h1{font-size:28px; line-height:1.2; margin:12px 0 6px; letter-spacing:-.01em;}
+  .wz-q p{color:var(--muted); font-size:17px; margin:0 0 18px; line-height:1.45;}
+  .wz-hero{text-align:center; padding:14px 0 4px;} .wz-ico{font-size:60px; line-height:1;}
+  .wz-hero h1{font-size:30px; margin:10px 0 6px;} .wz-hero p{color:var(--muted); font-size:17px; margin:0 0 16px;}
+  .wz-last{background:var(--surface-2); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:6px; font-size:16px;}
+  .wz-last .hint{font-size:16px; margin:0;}
+  .wz-start .btn.big{margin-top:12px; border-radius:18px;}
+  .wz-start .load-btn{margin-top:12px; border-radius:18px;}
+  .wz-ghost{background:transparent !important; border-color:transparent !important; color:var(--brand) !important; font-size:18px !important;}
+  body.wz .sec[data-wz]{background:transparent; border:none; padding:0; box-shadow:none; margin-bottom:6px;}
+  body.wz .sec[data-wz] > .sec-h{display:none;}
+  body.wz .sec[data-wz="number"] .fld:not([data-key]){display:none;}
+  body.wz .sec[data-wz="number"] .fld[data-key="number"]{grid-column:span 12;}
+  body.wz #number{font-size:32px; font-weight:700; text-align:center; padding:18px; border-radius:18px;}
+  body.wz #site_name{font-size:24px; text-align:center; padding:16px; border-radius:18px;}
+  body.wz #items_edit input[data-k="price"]{font-size:28px; font-weight:700; text-align:center;}
+  body.wz .fld[data-key="number"] .hint, body.wz .fld[data-key="site_name"] .hint{text-align:center; font-size:16px;}
+  body.wz .fld[data-key="number"] .acts, body.wz .fld[data-key="site_name"] .acts{justify-content:center;}
+  body.wz .month-pick{background:transparent; border:none; padding:0;}
+  body.wz .month-pick > label, body.wz .month-pick .mp-row{display:none;}
+  .wz-year{display:flex; align-items:center; justify-content:center; gap:18px; margin:0 0 14px; font-size:22px;}
+  .wz-year button{width:46px; height:46px; border-radius:50%; border:2px solid var(--line); background:var(--surface); color:var(--ink); font-size:22px; cursor:pointer;}
+  .wz-months{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:12px;}
+  .wz-months button{min-height:54px; font:inherit; font-size:18px; border-radius:16px; border:2px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; padding:6px 2px;}
+  .wz-months button.on{background:var(--brand); border-color:var(--brand); color:var(--on-brand); font-weight:700;}
+  @media (max-width:380px){ .wz-months{gap:7px;} .wz-months button{font-size:15px;} .wz-q h1{font-size:24px;} body.wz #number{font-size:26px;} }
+  .wz-sum{background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:2px 16px; margin-bottom:14px;}
+  .wz-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line);}
+  .wz-row:first-child{border-top:none;}
+  .wz-row .l{color:var(--muted); font-size:14px;} .wz-row .v{font-weight:700; font-size:18px; word-break:break-word;} .wz-row .v small{font-weight:400; color:var(--muted); font-size:14px;}
+  .wz-row .r{display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto;}
+  .wz-chg{min-height:44px; padding:0 8px; border:none; background:none; color:var(--brand); font:inherit; font-size:15px; font-weight:600; cursor:pointer;}
+  .wz-pill{font-size:13px; font-weight:600; padding:3px 8px; border-radius:99px; white-space:nowrap;}
+  .wz-pill.need{color:var(--red); background:var(--red-bg);} .wz-pill.done{color:var(--green); background:var(--green-bg);}
+  body.wz .wz-fixed .inner .sec{margin-bottom:12px;}
+  /* navigácia Späť / Ďalej – prilepená dole v paneli (mobil aj počítač) */
+  body.wz .mbar{display:flex; position:sticky; left:auto; right:auto; bottom:0; z-index:60; margin:18px -18px -18px; border-radius:0 0 16px 16px;
+     padding:10px 14px calc(12px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.06); flex-direction:column; gap:6px;}
+  body.wz .mbar .row{display:flex; gap:8px;}
+  body.wz .mbar .row .btn{flex:1; padding:15px 10px; font-weight:700; font-size:18px; border-radius:16px;}
+  body.wz #wz-back{flex:0 0 32%;} body.wz #btn-open-prev{flex:0 0 58px;}
+  body.wz .mbar-st{font-size:15px; font-weight:700; text-align:center;}
+  @media (min-width:1001px){ body.wz #btn-open-prev{display:none !important;} }
+  @media (max-width:520px){ body.wz .theme-btn .t-tx{display:none;} body.wz .theme-btn{min-width:44px; padding:6px 10px;} }
+  @media (max-width:1000px){ body.wz .wrap{padding-bottom:12px;} }
+  @media (max-width:600px){ body.wz .mbar{margin:14px -10px -12px;} }
 </style>
 <script>try{ var t=localStorage.getItem('simple_theme_v1'); if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t); }catch(e){}</script>
 </head>
@@ -223,6 +288,26 @@
   <!-- ================= EDITOR ================= -->
   <div id="editor">
     <div class="panel">
+      <!-- ===== Sprievodca: hlavička s postupom ===== -->
+      <div class="wz-top">
+        <button type="button" class="wz-home" id="wz-home" aria-label="Na začiatok">🏠</button>
+        <div class="wz-prog" aria-hidden="true"><i id="wz-bar"></i></div>
+        <span class="wz-no" id="wz-no"></span>
+      </div>
+      <!-- ===== Úvod ===== -->
+      <section class="wz-start" data-wz="start">
+        <div class="wz-hero"><div class="wz-ico">🧾</div><h1>Nová faktúra</h1>
+          <p>Prevediem ťa krok za krokom. Na každej obrazovke len jedna otázka.</p></div>
+        <div class="wz-last" id="wz_last"></div>
+        <button type="button" class="btn big primary" id="wz-go">▶ Začať novú faktúru</button>
+        <div id="wz_newslot"></div>
+        <button type="button" class="btn big" id="wz-arch">📄 Staršie faktúry</button>
+        <button type="button" class="btn big wz-ghost" id="wz-set">⚙️ Nastavenia a zálohy</button>
+      </section>
+      <!-- ===== Otázka aktuálneho kroku ===== -->
+      <div class="wz-q" id="wz_q"></div>
+      <!-- ===== Kontrola: súhrn ===== -->
+      <section class="wz-check" data-wz="check"><div class="wz-sum" id="wz_sum"></div></section>
       <div class="top-load">
         <button type="button" class="btn small theme-btn" id="btn-theme">🌙 Tmavý režim</button>
         <div style="clear:both"></div>
@@ -408,6 +493,7 @@
         <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
         <button type="button" class="btn big" id="btn-mail" style="margin-top:10px">📧 Uložiť a poslať e-mailom</button>
         <div class="saved-msg" id="saved_msg"></div>
+        <button type="button" class="btn big primary" id="wz-again" hidden style="margin-top:10px">↺ Ďalšia faktúra</button>
         <div class="mail-panel" id="mail_panel" hidden>
           <div class="mp-title">📧 E-mail je pripravený</div>
           <div class="mp-line">Komu: <b id="mail_to"></b></div>
@@ -426,6 +512,12 @@
           <button type="button" class="btn" id="btn-print">🖨️ Vytlačiť</button>
         </div>
       </div>
+
+      <!-- ===== Stále údaje (v kroku Kontrola) ===== -->
+      <details class="box wz-fixed" id="wz_fixed" data-wz="check">
+        <summary>🏢 Stále údaje – firma, platba, texty, pečiatka</summary>
+        <div class="inner"><p class="sub-note">Zvyčajne rovnaké ako minule. Meň ich, len ak sa niečo zmenilo.</p><div id="wz_fixed_in"></div></div>
+      </details>
 
       <!-- ===== Staré faktúry ===== -->
       <details class="box" id="arch_box">
@@ -569,7 +661,9 @@
 <div class="mbar">
   <div class="mbar-st need" id="mbar_st"></div>
   <div class="row">
-    <button type="button" class="btn" id="btn-open-prev">👁 Náhľad</button>
+    <button type="button" class="btn" id="wz-back">← Späť</button>
+    <button type="button" class="btn" id="btn-open-prev" aria-label="Náhľad faktúry">👁</button>
+    <button type="button" class="btn primary" id="wz-next">Ďalej →</button>
     <button type="button" class="btn primary" id="btn-mbar-save">💾 Uložiť a PDF</button>
   </div>
 </div>
@@ -1493,7 +1587,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(act==='next-number'){ setVal('number', nextNumber(state.base.number)); syncNumber(); }
     else if(act==='item-ok'){ const i=+b.closest('.item').dataset.i; ['name','desc','qty','price'].forEach(k=>state.confirmed.add('item_'+k+'_'+i)); }
     else if(act==='item-del'){ const i=+b.closest('.item').dataset.i; if(!confirm('Naozaj odstrániť položku '+(i+1)+'?')) return; state.items.splice(i,1); state.baseItems.splice(i,1); state.confirmed=new Set([...state.confirmed].filter(k=>!k.startsWith('item_'))); renderEditItems(); }
-    else if(act==='use'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Vyplniť novú faktúru podľa faktúry '+(r.number||'')+'?')){ loadTemplate(r); saveDraft(); window.scrollTo({top:0,behavior:'smooth'}); } return; }
+    else if(act==='use'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Vyplniť novú faktúru podľa faktúry '+(r.number||'')+'?')){ loadTemplate(r); saveDraft(); window.scrollTo({top:0,behavior:'smooth'}); wzGo('number'); } return; }
     else if(act==='del'){ const id=+b.closest('[data-id]').dataset.id; const r=loadAll().find(x=>x.id===id); if(r && confirm('Zmazať faktúru '+(r.number||'')+'?\n(Presunie sa do koša, dá sa obnoviť.)')){ toTrash(r); saveAll(loadAll().filter(x=>x.id!==id)); renderArchive(); } return; }
     else if(act==='restore'){ const id=+b.closest('[data-tid]').dataset.tid; const tr=readJSON(TRASH_KEY,[]); const r=tr.find(x=>x.id===id); if(!r) return; const list=loadAll(); const {deleted_at,...row}=r; while(list.some(x=>x.id===row.id)) row.id++; list.push(row); if(saveAll(list)){ lsSet(TRASH_KEY, JSON.stringify(tr.filter(x=>x!==r))); renderArchive(); } return; }
     else if(act==='purge'){ const id=+b.closest('[data-tid]').dataset.tid; if(confirm('Natrvalo vymazať túto faktúru z koša? Toto sa už nedá vrátiť.')){ lsSet(TRASH_KEY, JSON.stringify(readJSON(TRASH_KEY,[]).filter(x=>x.id!==id))); renderArchive(); } return; }
@@ -1739,9 +1833,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // posunie stránku na ďalšie (najbližšie nižšie) červené pole a krátko ho zvýrazní
   function gotoNext(){
     const all=qsa('#editor .fld.need'); if(!all.length) return;
-    const y=(window.scrollY||0)+120;
-    const el=all.find(f=>f.getBoundingClientRect().top+window.scrollY>y+10) || all[0];
-    el.scrollIntoView({behavior:'smooth', block:'center'});
+    const el=all.slice().sort((a,b)=> WZ_ORDER.indexOf(wzStepOf(a)) - WZ_ORDER.indexOf(wzStepOf(b)))[0];
+    const st=wzStepOf(el); if(st!==wzStep) wzGo(st);
+    if(el.closest('#wz_fixed')) qs('#wz_fixed').open=true;
+    setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'center'}), 60);
     el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
     if(!matchMedia('(pointer:coarse)').matches){ const inp=el.querySelector('input,textarea'); if(inp) setTimeout(()=>inp.focus({preventScroll:true}),350); }
   }
@@ -1750,9 +1845,118 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // ---------- tmavý / svetlý režim ----------
   const THEME_KEY='simple_theme_v1';
   function isDark(){ const t=document.documentElement.getAttribute('data-theme'); return t? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
-  function themeLabel(){ qs('#btn-theme').textContent = isDark()? '☀️ Svetlý režim' : '🌙 Tmavý režim'; }
+  function themeLabel(){ const d=isDark(), b=qs('#btn-theme'); b.innerHTML = d? '☀️<span class="t-tx"> Svetlý režim</span>' : '🌙<span class="t-tx"> Tmavý režim</span>'; b.setAttribute('aria-label', d? 'Svetlý režim' : 'Tmavý režim'); }
   qs('#btn-theme').onclick=()=>{ const next=isDark()? 'light':'dark'; document.documentElement.setAttribute('data-theme',next); lsSet(THEME_KEY,next); themeLabel(); };
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeLabel); }catch(e){}
+
+  // ================= SPRIEVODCA (rozloženie do krokov; všetky funkcie ostávajú) =================
+  const WZ_ORDER=['number','month','site','price','check'];
+  const WZ_Q={
+    number:['Aké bude číslo faktúry?','Navrhol som ďalšie číslo v poradí. Ak sedí, stlač <b>Ďalej</b>.'],
+    month:['Za ktorý mesiac?','Ťukni na mesiac – všetky dátumy sa nastavia samé.'],
+    site:['Na akej stavbe?','Ak je stavba rovnaká ako minule, stlač <b>✓ Nechať tak</b>.'],
+    price:['Koľko fakturuješ?','Suma v eurách (bez DPH). Dá sa vypočítať aj z hodín 🧮.'],
+    check:['Skontroluj faktúru','Ak je všetko v poriadku, ulož ju alebo pošli e-mailom.'],
+    archive:['Staršie faktúry','Uložené faktúry, kôš a zálohy.'],
+    settings:['Nastavenia a zálohy','Ktoré polia sa menia, pevné polia, zálohy.'],
+  };
+  let wzStep='start', wzYear=null;
+  const wzStepOf=(el)=>{ const w=el.closest('[data-wz]'); return w? w.dataset.wz : 'check'; };
+  function wzSetup(){
+    document.body.classList.add('wz');
+    const secs=qsa('#editor .panel > .sec');
+    const map=['number','fixed','site','month','fixed','price','fixed','fixed','fixed'];
+    secs.forEach((sec,i)=>{ if(map[i]==='fixed') qs('#wz_fixed_in').appendChild(sec); else sec.dataset.wz=map[i]; });
+    qs('#status').dataset.wz='check';
+    qs('#btn-save-pdf').parentElement.dataset.wz='check';
+    qs('#btn-save-pdf').parentElement.id='wz_end';
+    qs('#arch_box').dataset.wz='archive'; qs('#settings_box').dataset.wz='settings';
+    qs('.wz-top').appendChild(qs('#btn-theme'));
+    qs('#wz_newslot').appendChild(qs('#btn-new'));
+    qs('#wz_last').appendChild(qs('#last_info'));
+    qs('#editor .panel').appendChild(qs('.mbar'));            // navigácia dole v paneli (mobil aj počítač)
+    // mriežka mesiacov namiesto rozbaľovacích zoznamov (zoznamy ostávajú ako úložisko hodnoty)
+    const mp=qs('.month-pick');
+    const grid=document.createElement('div'); grid.className='wz-mgrid';
+    grid.innerHTML=`<div class="wz-year"><button type="button" data-wy="-1" aria-label="Predchádzajúci rok">‹</button><b id="wz_y"></b><button type="button" data-wy="1" aria-label="Nasledujúci rok">›</button></div>
+      <div class="wz-months">${J_MONTHS_CAP.map((m,i)=>`<button type="button" data-wm="${i}">${m}</button>`).join('')}</div>`;
+    mp.querySelector('.mp-row').after(grid);
+    grid.addEventListener('click',e=>{
+      const b=e.target.closest('button'); if(!b) return;
+      if(b.dataset.wy){ wzYear+=+b.dataset.wy; wzSync(); return; }
+      const ys=qs('#mp_year'); if(![...ys.options].some(o=>+o.value===wzYear)){ const o=document.createElement('option'); o.value=wzYear; o.textContent=wzYear; ys.appendChild(o); }
+      ys.value=wzYear; const ms=qs('#mp_month'); ms.value=b.dataset.wm; ms.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    // udalosti sprievodcu
+    qs('#wz-go').onclick=wzBegin;
+    qs('#wz-arch').onclick=()=>{ qs('#arch_box').open=true; wzGo('archive'); };
+    qs('#wz-set').onclick=()=>{ qs('#settings_box').open=true; wzGo('settings'); };
+    qs('#wz-home').onclick=()=>wzGo('start');
+    qs('#wz-back').onclick=()=>{ const i=WZ_ORDER.indexOf(wzStep); wzGo(i>0? WZ_ORDER[i-1] : 'start'); };
+    qs('#wz-next').onclick=wzNext;
+    qs('#btn-new').addEventListener('click',()=>setTimeout(wzSync,0));
+    qs('#wz-again').onclick=()=>{ qs('#btn-new').click(); wzGo('start'); };
+    new MutationObserver(()=>{ qs('#wz-again').hidden = qs('#saved_msg').style.display!=='block'; }).observe(qs('#saved_msg'),{attributes:true, attributeFilter:['style']});
+    document.addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.tagName==='INPUT' && e.target.type!=='checkbox' && WZ_ORDER.slice(0,4).includes(wzStep)){ e.preventDefault(); wzNext(); } });
+    ['input','change','click'].forEach(ev=> document.addEventListener(ev,()=>setTimeout(wzSync,0)));
+  }
+  function wzBegin(){
+    // nová faktúra (bez rozpracovanej): rovno navrhni ďalšie číslo a mesiac
+    if(!lsGet(DRAFT_KEY) && state.base && state.base.number){
+      const nb=qs('[data-act="next-number"]'); if(nb && !nb.hidden) nb.click();
+      qs('[data-act="apply-month"]').click();
+    }
+    wzGo('number');
+  }
+  function wzNext(){
+    if(wzStep==='number' && !norm(qs('#number').value)){ qs('#number').focus(); return; }
+    if(wzStep==='month' && !qs('#period_from').value) return;
+    const i=WZ_ORDER.indexOf(wzStep); if(i>=0 && i<WZ_ORDER.length-1) wzGo(WZ_ORDER[i+1]);
+  }
+  function wzGo(step){
+    wzStep=step; try{ sessionStorage.setItem('wz_step', step); }catch(e){}
+    qsa('#editor [data-wz]').forEach(el=> el.toggleAttribute('data-wzoff', el.dataset.wz!==step));   // atribút – triedy prepisuje aj iný kód
+    const q=WZ_Q[step]; qs('#wz_q').innerHTML = q? `<h1>${q[0]}</h1><p>${q[1]}</p>` : ''; qs('#wz_q').hidden=!q;
+    if(step==='month'){ const cur=parseIso(qs('#period_from').value); wzYear = +qs('#mp_year').value || (cur? cur.getFullYear() : new Date().getFullYear()); }
+    wzSync(); window.scrollTo({top:0});
+    if(step!=='start' && !matchMedia('(pointer:coarse)').matches){ const f={number:'#number', site:'#site_name', price:'#items_edit input[data-k="price"]'}[step]; if(f) setTimeout(()=>{ const x=qs(f); if(x){ x.focus({preventScroll:true}); try{ x.select(); }catch(e){} } }, 50); }
+  }
+  function wzSync(){
+    const i=WZ_ORDER.indexOf(wzStep), inFlow=i>=0;
+    qs('#wz-bar').style.width = (inFlow? (i+1)/WZ_ORDER.length*100 : 0)+'%';
+    qs('#wz-no').textContent = inFlow? (i+1)+' / '+WZ_ORDER.length : '';
+    qs('.wz-prog').style.visibility = inFlow? 'visible':'hidden';
+    const bar=qs('.mbar'); bar.hidden = wzStep==='start';
+    qs('#wz-next').hidden = !inFlow || wzStep==='check';
+    qs('#btn-mbar-save').hidden = wzStep!=='check';
+    qs('#btn-open-prev').hidden = !inFlow;
+    qs('#mbar_st').hidden = !inFlow;
+    // úvod
+    if(wzStep==='start'){
+      const draft=!!lsGet(DRAFT_KEY);
+      qs('#wz-go').textContent = draft? '▶ Pokračovať v rozpracovanej faktúre' : '▶ Začať novú faktúru';
+      qs('#btn-new').hidden=!draft; qs('#btn-new').textContent='↺ Začať odznova (podľa poslednej faktúry)';
+    }
+    // mesiac
+    if(wzStep==='month'){
+      const cur=parseIso(qs('#period_from').value); qs('#wz_y').textContent=wzYear;
+      qsa('.wz-months [data-wm]').forEach(b=>{ const on=!!(cur && cur.getFullYear()===wzYear && cur.getMonth()===+b.dataset.wm); b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); });
+    }
+    // súhrn
+    if(wzStep==='check'){
+      const f=getFlat(), t=totals(), pf=parseIso(f.period_from);
+      const st=(sel)=>{ const el=qs(sel); return !el? '' : el.classList.contains('need')? '<span class="wz-pill need">✏️ zmeniť</span>' : el.classList.contains('done')? '<span class="wz-pill done">✓ hotovo</span>' : ''; };
+      const row=(label,val,go,sel)=>`<div class="wz-row"><div><div class="l">${label}</div><div class="v">${val}</div></div><div class="r">${sel? st(sel):''}<button type="button" class="wz-chg" data-go="${go}">Zmeniť</button></div></div>`;
+      qs('#wz_sum').innerHTML = row('Číslo faktúry', esc(f.number)||'–','number','.fld[data-key="number"]')
+        + row('Mesiac', pf? esc(MONTHS[pf.getMonth()]+' '+pf.getFullYear())+` <small>· splatné ${esc(fmtDate(f.due))}</small>` : '–','month','.fld[data-key="period_from"]')
+        + row('Stavba', esc(f.site_name)||'–','site','.fld[data-key="site_name"]')
+        + row('Suma', money(t.total)+' '+esc(f.currency),'price','#items_edit .fld[data-ik="price"]')
+        + row('Odberateľ', esc((f.b_party||'').split('\n')[0])||'–','fixed')
+        + row('E-mail firmy', esc(f.b_email)||'<i>nevyplnený</i>','fixed');
+      qsa('#wz_sum [data-go]').forEach(b=> b.onclick=()=>{ if(b.dataset.go==='fixed'){ qs('#wz_fixed').open=true; qs('#wz_fixed').scrollIntoView({behavior:'smooth'}); } else wzGo(b.dataset.go); });
+    }
+  }
+  const J_MONTHS_CAP=['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
 
   // ---------- štart ----------
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -1771,6 +1975,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       loadTemplate(latestRow());
     }
     fitPreview(); addEventListener('resize', fitPreview);
+    wzSetup();
+    let s0='start'; try{ s0=sessionStorage.getItem('wz_step')||'start'; }catch(e){}
+    wzGo(lsGet(DRAFT_KEY) && WZ_Q[s0]? s0 : 'start');
   });
 })();
 </script>
