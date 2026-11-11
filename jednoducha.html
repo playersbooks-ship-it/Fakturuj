@@ -237,7 +237,7 @@
           <input id="delivery" type="date">
           <div class="hint"></div>
           <div class="acts">
-            <button type="button" class="btn small" data-act="same-issue">= Vystavená</button>
+            <button type="button" class="btn small" data-act="same-period">= Koniec obdobia</button>
             <button type="button" class="btn small okk only-need" data-ok="delivery">✓ Nechať tak</button>
           </div>
         </div>
@@ -673,6 +673,8 @@
       row.classList.toggle('has-need', rowNeed);
     });
 
+    const dh=document.querySelector('.fld[data-key="delivery"] .hint');
+    dh.innerHTML = (dh.innerHTML? dh.innerHTML+'<br>' : '') + 'Nastaví sa samo podľa „Obdobie do“.';
     // tlačidlo „ďalšie číslo“
     const nb=qs('[data-act="next-number"]'); const nn=nextNumber(state.base.number);
     if(nn && norm(qs('#number').value)!==nn){ nb.hidden=false; nb.textContent='Použiť ďalšie číslo: '+nn; } else nb.hidden=true;
@@ -707,6 +709,8 @@
     return 14;
   }
   function setVal(id,v){ const el=qs('#'+id); el.value=v; }
+  // dátum dodania = vždy posledný deň obdobia
+  function syncDelivery(){ const pt=qs('#period_to').value; if(pt) setVal('delivery', pt); }
   // keď sa zmení číslo, prepíš ho aj vo VS a správe pre prijímateľa (ak tam bolo staré číslo)
   function syncNumber(){
     const oldN=norm(state.base.number), newN=norm(qs('#number').value);
@@ -825,6 +829,7 @@
       state.items[i][k] = (k==='qty'||k==='price') ? (t.value===''?'':Number(t.value)) : t.value;
       const s=qs('#isub_'+i); if(s) s.textContent=money((Number(state.items[i].qty)||0)*(Number(state.items[i].price)||0));
     }else if(t.id==='number'){ syncNumber(); }
+    else if(t.id==='period_to'){ syncDelivery(); }
     else if(t.matches('[data-watch]')){ return; }
     if(t.closest('#editor')) refresh();
   });
@@ -835,6 +840,7 @@
       lsSet(WATCH_KEY, JSON.stringify([...watch])); applyLayout(); refresh(false); return;
     }
     if(t.id==='currency'){ renderEditItems(); }
+    if(t.id==='period_to') syncDelivery();
     if(t.type==='checkbox' || t.tagName==='SELECT' || t.type==='date') refresh();
   });
 
@@ -845,9 +851,9 @@
     const act=b.dataset.act; if(!act) return;
     const today=new Date();
     if(act==='today'){ setVal(b.dataset.target, iso(today)); }
-    else if(act==='same-issue'){ setVal('delivery', qs('#issue').value); }
-    else if(act==='last-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth()-1, 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth(), 0))); }
-    else if(act==='this-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth(), 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth()+1, 0))); }
+    else if(act==='same-period'){ syncDelivery(); }
+    else if(act==='last-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth()-1, 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth(), 0))); syncDelivery(); }
+    else if(act==='this-month'){ setVal('period_from', iso(new Date(today.getFullYear(), today.getMonth(), 1))); setVal('period_to', iso(new Date(today.getFullYear(), today.getMonth()+1, 0))); syncDelivery(); }
     else if(act==='due-days'){ const a=parseIso(qs('#issue').value)||today; setVal('due', iso(new Date(a.getFullYear(), a.getMonth(), a.getDate()+dueDays()))); }
     else if(act==='next-number'){ setVal('number', nextNumber(state.base.number)); syncNumber(); }
     else if(act==='item-ok'){ const i=+b.closest('.item').dataset.i; ['name','desc','qty','price'].forEach(k=>state.confirmed.add('item_'+k+'_'+i)); }
