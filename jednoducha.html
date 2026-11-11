@@ -12,7 +12,7 @@
   .muted{color:var(--muted);} .right{text-align:right;}
 
   /* ===== Editor (jednoduché UI) ===== */
-  .wrap{display:grid; grid-template-columns: minmax(380px, 560px) 1fr; gap:20px; padding:16px; max-width:1500px; margin:0 auto;}
+  .wrap{display:grid; grid-template-columns: minmax(420px, 700px) 1fr; gap:20px; padding:16px; max-width:1500px; margin:0 auto;}
   @media (max-width: 1000px){ .wrap{grid-template-columns:1fr; padding:10px;} }
   .panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; font-size:18px;}
   .panel h2{margin:0 0 12px; font-size:22px;}
@@ -29,7 +29,13 @@
   .legend span{display:inline-flex; align-items:center; gap:6px;}
   .legend i{display:inline-block; width:18px; height:18px; border-radius:5px; border:3px solid;}
 
-  .fld{margin-bottom:14px;}
+  .fld{margin-bottom:14px; min-width:0;}
+  .grid{display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:0 12px;}
+  .col-12{grid-column:span 12;} .col-8{grid-column:span 8;} .col-6{grid-column:span 6;} .col-4{grid-column:span 4;}
+  @media (max-width: 1250px) and (min-width: 1001px){ .grid .col-4[data-key]{grid-column:span 12;} }
+  @media (max-width: 640px){ .grid .col-8, .grid .col-6, .grid .col-4{grid-column:span 12;} .grid .grid .col-6{grid-column:span 6;} }
+  .hr{border:none; border-top:1px solid var(--line); margin:6px 0 14px;}
+  label.chk{display:flex !important; align-items:center; gap:10px; font-weight:400 !important; cursor:pointer;}
   .fld > label{display:block; font-size:16px; font-weight:600; margin-bottom:6px; color:#374151;}
   input,select,textarea{width:100%; box-sizing:border-box; padding:12px 14px; border:2px solid #d1d5db; border-radius:12px; font:inherit; font-size:18px; background:#fff;}
   textarea{min-height:70px; resize:vertical;}
@@ -161,12 +167,133 @@
 
       <div id="status" class="status need">…</div>
 
-      <!-- Polia, ktoré sa menia (sem sa presunú podľa nastavení) -->
-      <div id="change_list"></div>
+      <div class="grid">
+        <div class="col-4 fld"><label>Prefix</label><input id="prefix" value="faktura" readonly></div>
+        <div class="col-8 fld" data-key="number">
+          <label>Číslo / Nummer</label>
+          <input id="number" placeholder="2025-001">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="next-number" hidden></button>
+            <button type="button" class="btn small okk only-need" data-ok="number">✓ Nechať tak</button>
+          </div>
+        </div>
 
-      <div class="h3">Položky na faktúre</div>
-      <div id="items_edit"></div>
-      <button type="button" class="btn small" id="add-row">+ Pridať ďalšiu položku</button>
+        <div class="col-12"><hr class="hr"></div>
+
+        <div class="col-6">
+          <div class="fld"><label>Dodávateľ / Lieferant</label><textarea id="s_party" placeholder="Meno, adresa…"></textarea></div>
+          <div class="grid">
+            <div class="col-6 fld"><label>IČO</label><input id="s_ico"></div>
+            <div class="col-6 fld"><label>DIČ</label><input id="s_dic"></div>
+            <div class="col-12 fld"><label>IČ DPH</label><input id="s_icdph"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="fld"><label>Odberateľ / Kunde</label><textarea id="b_party" placeholder="Názov, adresa…"></textarea></div>
+          <div class="grid">
+            <div class="col-6 fld"><label>IČO</label><input id="b_ico"></div>
+            <div class="col-6 fld"><label>DIČ</label><input id="b_dic"></div>
+            <div class="col-12 fld"><label>IČ DPH</label><input id="b_icdph"></div>
+          </div>
+        </div>
+
+        <div class="col-12 fld" data-key="site_name">
+          <label>Stavba / Baustelle</label>
+          <input id="site_name" placeholder="Názov stavby">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="site_name">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-6 fld" data-key="period_from">
+          <label>Obdobie od / Zeitraum von</label>
+          <input id="period_from" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="last-month">Minulý mesiac</button>
+            <button type="button" class="btn small" data-act="this-month">Tento mesiac</button>
+            <button type="button" class="btn small okk only-need" data-ok="period_from">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-6 fld" data-key="period_to">
+          <label>Obdobie do / Zeitraum bis</label>
+          <input id="period_to" type="date">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="period_to">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-4 fld" data-key="issue">
+          <label>Vystavená / Ausgestellt</label>
+          <input id="issue" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="today" data-target="issue">Dnes</button>
+            <button type="button" class="btn small okk only-need" data-ok="issue">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-4 fld" data-key="delivery">
+          <label>Dodanie / Lieferdatum</label>
+          <input id="delivery" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="same-issue">= Vystavená</button>
+            <button type="button" class="btn small okk only-need" data-ok="delivery">✓ Nechať tak</button>
+          </div>
+        </div>
+        <div class="col-4 fld" data-key="due">
+          <label>Splatnosť / Fällig am</label>
+          <input id="due" type="date">
+          <div class="hint"></div>
+          <div class="acts">
+            <button type="button" class="btn small" data-act="due-days"></button>
+            <button type="button" class="btn small okk only-need" data-ok="due">✓ Nechať tak</button>
+          </div>
+        </div>
+
+        <div class="col-4 fld"><label>Mena / Währung</label>
+          <select id="currency"><option value="EUR" selected>EUR</option><option value="CZK">CZK</option><option value="PLN">PLN</option></select>
+        </div>
+        <div class="col-4 fld"><label>DPH % / MwSt %</label><input id="vat_rate" type="number" step="0.01" value="0"></div>
+        <div class="col-4 fld" data-key="vs">
+          <label>VS / Referenz</label>
+          <input id="vs">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="vs">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-12">
+          <div class="h3">Položky / Positionen</div>
+          <div id="items_edit"></div>
+          <button type="button" class="btn small" id="add-row">+ Pridať ďalšiu položku</button>
+        </div>
+
+        <div class="col-12 fld" data-key="outro_bi" style="margin-top:12px">
+          <label>Text po faktúre / Hinweis</label>
+          <textarea id="outro_bi"></textarea>
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="outro_bi">✓ Nechať tak</button></div>
+        </div>
+        <div class="col-12 fld" data-key="addendum_bi">
+          <label>Dodatok / Zusatz</label>
+          <input id="addendum_bi">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="addendum_bi">✓ Nechať tak</button></div>
+        </div>
+
+        <div class="col-12"><hr class="hr"><div class="h3" style="margin-top:4px">Platba / Zahlung</div></div>
+        <div class="col-6 fld"><label>Prijímateľ / Empfänger</label><input id="pay_name"></div>
+        <div class="col-6 fld"><label>IBAN</label><input id="pay_iban"></div>
+        <div class="col-6 fld"><label>BIC</label><input id="pay_bic"></div>
+        <div class="col-6 fld" id="pay_amount_fld"><label>Suma / Betrag</label><input id="pay_amount" type="number" step="0.01"></div>
+        <div class="col-12 fld"><label class="chk"><input id="pay_use_total" type="checkbox" checked> Použiť celkovú sumu faktúry</label></div>
+        <div class="col-12 fld" data-key="pay_msg">
+          <label>Správa pre prijímateľa / Verwendungszweck</label>
+          <input id="pay_msg">
+          <div class="hint"></div>
+          <div class="acts"><button type="button" class="btn small okk only-need" data-ok="pay_msg">✓ Nechať tak</button></div>
+        </div>
+        <div class="col-12 fld"><label class="chk"><input type="checkbox" id="show_qr" checked> Zobraziť QR kód</label></div>
+      </div>
 
       <div style="margin-top:20px">
         <button type="button" class="btn big primary" id="btn-save-pdf">💾 Uložiť a stiahnuť PDF</button>
@@ -181,49 +308,6 @@
           <button type="button" class="btn" id="btn-new">↺ Začať odznova (podľa poslednej)</button>
         </div>
       </div>
-
-      <!-- ===== Stále údaje ===== -->
-      <details class="box" id="fixed_box">
-        <summary>Stále údaje (netreba meniť)</summary>
-        <div class="inner">
-          <p class="sub-note">Tieto údaje sú rovnaké na každej faktúre. Meň ich, len ak sa naozaj niečo zmenilo.</p>
-
-          <div id="fixed_watchables"></div>
-
-          <div class="h3">Dodávateľ (ja)</div>
-          <div class="fld"><label>Meno a adresa</label><textarea id="s_party"></textarea></div>
-          <div class="g2">
-            <div class="fld"><label>IČO</label><input id="s_ico"></div>
-            <div class="fld"><label>DIČ</label><input id="s_dic"></div>
-          </div>
-          <div class="fld"><label>IČ DPH</label><input id="s_icdph"></div>
-
-          <div class="h3">Odberateľ (firma)</div>
-          <div class="fld"><label>Názov a adresa</label><textarea id="b_party"></textarea></div>
-          <div class="g2">
-            <div class="fld"><label>IČO</label><input id="b_ico"></div>
-            <div class="fld"><label>DIČ</label><input id="b_dic"></div>
-          </div>
-          <div class="fld"><label>IČ DPH</label><input id="b_icdph"></div>
-
-          <div class="h3">Platba</div>
-          <div class="fld"><label>Prijímateľ (meno na účte)</label><input id="pay_name"></div>
-          <div class="fld"><label>IBAN</label><input id="pay_iban"></div>
-          <div class="fld"><label>BIC</label><input id="pay_bic"></div>
-          <div class="fld"><label><input id="pay_use_total" type="checkbox" checked> Suma na zaplatenie = celková suma faktúry</label></div>
-          <div class="fld" id="pay_amount_fld"><label>Iná suma na zaplatenie</label><input id="pay_amount" type="number" step="0.01"></div>
-          <div class="fld"><label><input type="checkbox" id="show_qr" checked> Zobraziť QR kód na platbu</label></div>
-
-          <div class="h3">Ostatné</div>
-          <div class="g2">
-            <div class="fld"><label>Mena</label>
-              <select id="currency"><option value="EUR" selected>EUR</option><option value="CZK">CZK</option><option value="PLN">PLN</option></select>
-            </div>
-            <div class="fld"><label>DPH %</label><input id="vat_rate" type="number" step="0.01" value="0"></div>
-          </div>
-          <div class="fld"><label>Predpona čísla</label><input id="prefix" value="faktura" readonly></div>
-        </div>
-      </details>
 
       <!-- ===== Staré faktúry ===== -->
       <details class="box" id="arch_box">
@@ -269,93 +353,6 @@
           <p class="sub-note" style="margin-top:12px">Pôvodná (podrobná) verzia aplikácie: <a href="index.html">index.html</a></p>
         </div>
       </details>
-    </div>
-  </div>
-
-  <!-- Šablóny meniacich sa polí (presúvajú sa medzi „treba zmeniť“ a „stále údaje“) -->
-  <div id="watch_pool" hidden>
-    <div class="fld" data-key="number">
-      <label>Číslo faktúry</label>
-      <input id="number" placeholder="2025-001">
-      <div class="hint"></div>
-      <div class="acts">
-        <button type="button" class="btn small" data-act="next-number" hidden></button>
-        <button type="button" class="btn small okk only-need" data-ok="number">✓ Nechať tak</button>
-      </div>
-    </div>
-    <div class="fld" data-key="period_from">
-      <label>Obdobie od</label>
-      <input id="period_from" type="date">
-      <div class="hint"></div>
-      <div class="acts">
-        <button type="button" class="btn small" data-act="last-month">Minulý mesiac</button>
-        <button type="button" class="btn small" data-act="this-month">Tento mesiac</button>
-        <button type="button" class="btn small okk only-need" data-ok="period_from">✓ Nechať tak</button>
-      </div>
-    </div>
-    <div class="fld" data-key="period_to">
-      <label>Obdobie do</label>
-      <input id="period_to" type="date">
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="period_to">✓ Nechať tak</button></div>
-    </div>
-    <div class="fld" data-key="issue">
-      <label>Dátum vystavenia</label>
-      <input id="issue" type="date">
-      <div class="hint"></div>
-      <div class="acts">
-        <button type="button" class="btn small" data-act="today" data-target="issue">Dnes</button>
-        <button type="button" class="btn small okk only-need" data-ok="issue">✓ Nechať tak</button>
-      </div>
-    </div>
-    <div class="fld" data-key="delivery">
-      <label>Dátum dodania</label>
-      <input id="delivery" type="date">
-      <div class="hint"></div>
-      <div class="acts">
-        <button type="button" class="btn small" data-act="today" data-target="delivery">Dnes</button>
-        <button type="button" class="btn small" data-act="same-issue">Rovnako ako vystavenie</button>
-        <button type="button" class="btn small okk only-need" data-ok="delivery">✓ Nechať tak</button>
-      </div>
-    </div>
-    <div class="fld" data-key="due">
-      <label>Dátum splatnosti</label>
-      <input id="due" type="date">
-      <div class="hint"></div>
-      <div class="acts">
-        <button type="button" class="btn small" data-act="due-days"></button>
-        <button type="button" class="btn small okk only-need" data-ok="due">✓ Nechať tak</button>
-      </div>
-    </div>
-    <div class="fld" data-key="vs">
-      <label>Variabilný symbol (VS)</label>
-      <input id="vs">
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="vs">✓ Nechať tak</button></div>
-    </div>
-    <div class="fld" data-key="site_name">
-      <label>Stavba</label>
-      <input id="site_name">
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="site_name">✓ Nechať tak</button></div>
-    </div>
-    <div class="fld" data-key="pay_msg">
-      <label>Správa pre prijímateľa platby</label>
-      <input id="pay_msg">
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="pay_msg">✓ Nechať tak</button></div>
-    </div>
-    <div class="fld" data-key="outro_bi">
-      <label>Text pod faktúrou</label>
-      <textarea id="outro_bi"></textarea>
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="outro_bi">✓ Nechať tak</button></div>
-    </div>
-    <div class="fld" data-key="addendum_bi">
-      <label>Dodatok (napr. zmluva)</label>
-      <input id="addendum_bi">
-      <div class="hint"></div>
-      <div class="acts"><button type="button" class="btn small okk only-need" data-ok="addendum_bi">✓ Nechať tak</button></div>
     </div>
   </div>
 
@@ -611,12 +608,6 @@
 
   // ---------- rozloženie podľa nastavení ----------
   function applyLayout(){
-    const pool=qs('#watch_pool'), ch=qs('#change_list'), fx=qs('#fixed_watchables');
-    WATCHABLE.forEach(w=>{
-      const el=document.querySelector('.fld[data-key="'+w.key+'"]'); if(!el) return;
-      (watch.has(w.key)? ch : fx).appendChild(el);
-    });
-    void pool;
     qs('#watch_list').innerHTML = WATCHABLE.map(w=>`<label><input type="checkbox" data-watch="${w.key}" ${watch.has(w.key)?'checked':''}> ${esc(w.label)}</label>`).join('');
   }
 
@@ -1015,7 +1006,6 @@
       renderEditItems(); refresh(false);
     }else{
       loadTemplate(latestRow());
-      if(!latestRow()) qs('#fixed_box').open=true;  // prvé spustenie – treba vyplniť stále údaje
     }
     fitPreview(); addEventListener('resize', fitPreview);
   });
