@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dizajny faktúry</title>
+<style>
+  :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --page:#f3f4f6; --surface:#fff; --brand:#2563eb; --warn-bg:#fffbeb; --warn-line:#f59e0b; --warn-ink:#92400e; color-scheme:light; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; color-scheme:dark; } }
+  :root[data-theme="dark"]{ --ink:#e5e7eb; --muted:#9ca3af; --line:#334155; --page:#0b1120; --surface:#111827; --brand:#60a5fa; --warn-bg:#2a2110; --warn-line:#a16207; --warn-ink:#fcd34d; color-scheme:dark; }
+  body{ margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--page); color:var(--ink); }
+  main{ max-width:1100px; margin:0 auto; padding:24px 16px 40px; }
+  h1{ font-size:28px; margin:0 0 6px; }
+  .lead{ color:var(--muted); font-size:17px; margin:0 0 14px; line-height:1.5; }
+  .note{ background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-ink); border-radius:12px; padding:12px 14px; font-size:15px; margin-bottom:22px; line-height:1.5; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+  .shots{ display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:10px 10px 0; background:var(--page); }
+  .shots img{ width:100%; height:auto; display:block; border-radius:10px 10px 0 0; border:1px solid var(--line); border-bottom:none; }
+  .info{ padding:14px 16px 18px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .info h2{ font-size:20px; margin:0; display:flex; align-items:center; gap:10px; }
+  .num{ display:inline-flex; width:30px; height:30px; border-radius:50%; background:var(--brand); color:var(--surface); align-items:center; justify-content:center; font-size:16px; }
+  .info p{ margin:0; color:var(--muted); font-size:15px; line-height:1.45; flex:1; }
+  .open{ display:block; text-align:center; padding:12px; border-radius:12px; background:var(--brand); color:var(--surface); font-weight:700; text-decoration:none; font-size:17px; }
+  .back{ display:inline-block; margin-top:26px; color:var(--brand); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎨 5 dizajnov faktúry</h1>
+  <p class="lead">Všetky dizajny fungujú rovnako ako súčasná aplikácia – líšia sa len vzhľadom. Vľavo svetlý, vpravo tmavý režim. Vyskúšaj ich na mobile aj na počítači a vyber, ktorý sa najlepšie číta.</p>
+  <p class="note">⚠️ Dizajny používajú <b>tie isté uložené faktúry</b> ako súčasná aplikácia. Ak v nich faktúru uložíš, uloží sa naozaj (dá sa zmazať v „Staršie faktúry“ – presunie sa do koša).</p>
+  <div class="grid">
+    <article class="card">
+      <div class="shots">
+        <img src="dizajny/nahlad-1.jpg" alt="Dizajn 1 – Veľké písmo (svetlý)" loading="lazy" width="312" height="592">
+        <img src="dizajny/nahlad-1-tmavy.jpg" alt="Dizajn 1 – Veľké písmo (tmavý)" loading="lazy" width="312" height="592">
+      </div>
+      <div class="info">
+        <h2><span class="num">1</span> Veľké písmo</h2>
+        <p>Veľký text, hrubé rámiky a veľké tlačidlá – najľahšie na čítanie, aj bez okuliarov.</p>
+        <a class="open" href="dizajn-1.html">Vyskúšať dizajn 1 →</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="shots">
+        <img src="dizajny/nahlad-2.jpg" alt="Dizajn 2 – Minimalistický (svetlý)" loading="lazy" width="312" height="592">
+        <img src="dizajny/nahlad-2-tmavy.jpg" alt="Dizajn 2 – Minimalistický (tmavý)" loading="lazy" width="312" height="592">
+      </div>
+      <div class="info">
+        <h2><span class="num">2</span> Minimalistický</h2>
+        <p>Čisto biely, veľa vzduchu, bez rámikov a tieňov – pokojný a moderný.</p>
+        <a class="open" href="dizajn-2.html">Vyskúšať dizajn 2 →</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="shots">
+        <img src="dizajny/nahlad-3.jpg" alt="Dizajn 3 – Firemný (svetlý)" loading="lazy" width="312" height="592">
+        <img src="dizajny/nahlad-3-tmavy.jpg" alt="Dizajn 3 – Firemný (tmavý)" loading="lazy" width="312" height="592">
+      </div>
+      <div class="info">
+        <h2><span class="num">3</span> Firemný</h2>
+        <p>Tmavomodrá so zlatou, ostré rohy a pruhy pri sekciách – pôsobí ako účtovný program.</p>
+        <a class="open" href="dizajn-3.html">Vyskúšať dizajn 3 →</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="shots">
+        <img src="dizajny/nahlad-4.jpg" alt="Dizajn 4 – Pastelové karty (svetlý)" loading="lazy" width="312" height="592">
+        <img src="dizajny/nahlad-4-tmavy.jpg" alt="Dizajn 4 – Pastelové karty (tmavý)" loading="lazy" width="312" height="592">
+      </div>
+      <div class="info">
+        <h2><span class="num">4</span> Pastelové karty</h2>
+        <p>Mäkké zelené farby, biele karty s tieňom a zaoblené tlačidlá – priateľský a hravý.</p>
+        <a class="open" href="dizajn-4.html">Vyskúšať dizajn 4 →</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="shots">
+        <img src="dizajny/nahlad-5.jpg" alt="Dizajn 5 – Kompaktný (svetlý)" loading="lazy" width="312" height="592">
+        <img src="dizajny/nahlad-5-tmavy.jpg" alt="Dizajn 5 – Kompaktný (tmavý)" loading="lazy" width="312" height="592">
+      </div>
+      <div class="info">
+        <h2><span class="num">5</span> Kompaktný</h2>
+        <p>Menšie písmo a tesnejšie rozloženie – viac údajov na obrazovke naraz, vhodné na počítač.</p>
+        <a class="open" href="dizajn-5.html">Vyskúšať dizajn 5 →</a>
+      </div>
+    </article>
+  </div>
+  <a class="back" href="index.html">← Späť na súčasnú aplikáciu</a>
+</main>
+</body>
+</html>
