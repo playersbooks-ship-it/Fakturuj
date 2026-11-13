@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Emberwood">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+    <stop offset="0" stop-color="#3a2216"/><stop offset=".55" stop-color="#1c120d"/><stop offset="1" stop-color="#0d0907"/>
+  </radialGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#ff8a2a" stop-opacity=".55"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#c2260d"/><stop offset=".45" stop-color="#f2641a"/><stop offset="1" stop-color="#ffb43a"/>
+  </linearGradient>
+  <linearGradient id="core" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ff9a26"/><stop offset="1" stop-color="#ffe9a3"/>
+  </linearGradient>
+  <linearGradient id="word" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffc655"/><stop offset="1" stop-color="#ee5a17"/>
+  </linearGradient>
+</defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <g transform="translate(512 520) scale(1.12) translate(-512 -410)">
+  <circle cx="512" cy="450" r="430" fill="url(#glow)"/>
+  <path d="M512 96 C556 214 704 300 704 474 C704 594 618 676 512 676 C406 676 320 594 320 474 C320 384 378 336 404 248 C426 300 448 322 472 332 C462 250 480 164 512 96Z" fill="url(#flame)"/>
+  <path d="M516 250 C548 330 640 392 640 500 C640 580 584 634 512 634 C440 634 384 580 384 500 C384 446 414 416 432 372 C446 400 462 414 480 420 C474 362 490 300 516 250Z" fill="url(#core)"/>
+  <path d="M512 338 L560 424 Q536 418 512 428 Q488 418 464 424Z M512 392 L582 506 Q547 496 512 510 Q477 496 442 506Z M512 458 L604 596 Q558 582 512 600 Q466 582 420 596Z M500 590 H524 V676 Q540 700 578 708 H446 Q484 700 500 676Z" fill="#150e0a"/>
+  <path d="M628 154.0 L638 170 L628 186.0 L618 170Z" fill="#ffc655" opacity="1.00"/><path d="M676 226.4 L682 236 L676 245.6 L670 236Z" fill="#ffc655" opacity="0.82"/><path d="M380 158.8 L387 170 L380 181.2 L373 170Z" fill="#ffc655" opacity="0.86"/><path d="M338 254.0 L343 262 L338 270.0 L333 262Z" fill="#ffc655" opacity="0.78"/><path d="M596 88.0 L601 96 L596 104.0 L591 96Z" fill="#ffc655" opacity="0.78"/><path d="M436 97.6 L440 104 L436 110.4 L432 104Z" fill="#ffc655" opacity="0.73"/><path d="M712 323.6 L716 330 L712 336.4 L708 330Z" fill="#ffc655" opacity="0.73"/>
+  </g>
+</svg>
